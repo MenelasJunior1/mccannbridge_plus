@@ -5,6 +5,7 @@ import AdvancedCalendar from './sections/AdvancedCalendar';
 import ArchiveModal from './sections/ArchiveModal';
 import AdsSponsoringSection from './sections/AdsSponsoringSection';
 import PublicationImageManager from './sections/PublicationImageManager';
+import { getPostPerformance, formatMetricNumber } from './sections/calendarMetrics';
 
 const FMT = (n) => n.toLocaleString('fr-FR');
 
@@ -565,6 +566,16 @@ function CmEngagement() {
   const { publications = [], calendarPosts = [] } = useApp();
   const publishedCount = publications.filter(p => p.statut === 'Publié').length + calendarPosts.filter(p => p.status === 'PUBLISHED').length;
 
+  const totals = calendarPosts.reduce((acc, p) => {
+    const perf = getPostPerformance(p);
+    acc.vues += perf.vues;
+    acc.likes += perf.likes;
+    acc.commentaires += perf.commentaires;
+    acc.partages += perf.partages;
+    acc.engagement += perf.engagement;
+    return acc;
+  }, { vues: 0, likes: 0, commentaires: 0, partages: 0, engagement: 0 });
+
   return (
     <div className="cm-section-card">
       <div className="cm-section-head">
@@ -572,16 +583,33 @@ function CmEngagement() {
         <span className="tag tag-blue">TEMPS RÉEL</span>
       </div>
       <div className="cm-engage-chart">
-        <div style={{ textAlign: 'center', padding: '24px 0', color: '#94a3b8', fontSize: 13 }}>
+        <div style={{ textAlign: 'center', padding: '16px 0', color: '#94a3b8', fontSize: 13 }}>
           {publishedCount === 0 
             ? "Les métriques d'engagement se mettront à jour dès que vos posts seront publiés en direct."
-            : `${publishedCount} publication(s) en ligne suivie(s) en temps réel.`}
+            : `${publishedCount} publication(s) en ligne suivie(s) en temps réel avec ${formatMetricNumber(totals.vues)} vues cumulées.`}
         </div>
       </div>
-      <div className="cm-engage-metrics">
-        <div className="cm-engage-metric"><div className="cm-engage-metric-val">{publishedCount * 12}</div><div className="cm-engage-metric-label">Commentaires</div></div>
-        <div className="cm-engage-metric"><div className="cm-engage-metric-val">{publishedCount * 4}</div><div className="cm-engage-metric-label">Partages</div></div>
-        <div className="cm-engage-metric"><div className="cm-engage-metric-val">{publishedCount}</div><div className="cm-engage-metric-label">Posts actifs</div></div>
+      <div className="cm-engage-metrics" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))' }}>
+        <div className="cm-engage-metric">
+          <div className="cm-engage-metric-val" style={{ color: '#38bdf8' }}>{formatMetricNumber(totals.vues)}</div>
+          <div className="cm-engage-metric-label">👁 Vues</div>
+        </div>
+        <div className="cm-engage-metric">
+          <div className="cm-engage-metric-val" style={{ color: '#f43f5e' }}>{formatMetricNumber(totals.likes)}</div>
+          <div className="cm-engage-metric-label">❤️ Likes</div>
+        </div>
+        <div className="cm-engage-metric">
+          <div className="cm-engage-metric-val" style={{ color: '#fbbf24' }}>{formatMetricNumber(totals.commentaires)}</div>
+          <div className="cm-engage-metric-label">💬 Commentaires</div>
+        </div>
+        <div className="cm-engage-metric">
+          <div className="cm-engage-metric-val" style={{ color: '#a855f7' }}>{formatMetricNumber(totals.partages)}</div>
+          <div className="cm-engage-metric-label">🔄 Partages</div>
+        </div>
+        <div className="cm-engage-metric">
+          <div className="cm-engage-metric-val" style={{ color: '#ff9233', fontWeight: 900 }}>{formatMetricNumber(totals.engagement)}</div>
+          <div className="cm-engage-metric-label">⚡ Engagement cumulé</div>
+        </div>
       </div>
     </div>
   );

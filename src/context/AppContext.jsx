@@ -42,6 +42,8 @@ import {
   INITIAL_IMPORT_BATCH
 } from '../data/influenceSeedData';
 
+import { getInitialCommunityPosts } from '../pages/Calendar/sections/calendarMetrics';
+
 const AppContext = createContext(null);
 
 // Load publications from localStorage fallback (empty by default)
@@ -54,13 +56,19 @@ const loadSavedPublications = () => {
   }
 };
 
-// Load calendar posts from localStorage fallback (empty by default)
+// Load calendar posts from localStorage with certified initial Community Manager publications
 const loadSavedCalendarPosts = () => {
   try {
     const saved = localStorage.getItem('bridge_calendar_posts_v2');
-    return saved ? JSON.parse(saved) : [];
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    const initial = getInitialCommunityPosts();
+    try { localStorage.setItem('bridge_calendar_posts_v2', JSON.stringify(initial)); } catch (e) {}
+    return initial;
   } catch (e) {
-    return [];
+    return getInitialCommunityPosts();
   }
 };
 

@@ -3,6 +3,12 @@ import { CM_DATA } from '../../../data/community';
 import { useApp } from '../../../context/AppContext';
 import PublicationImageManager, { processImageFile, BRAND_IMAGE_PRESETS } from './PublicationImageManager';
 import PostSponsoringSection, { getNormalizedSponsoring } from './PostSponsoringSection';
+import { 
+  getPostPerformance, 
+  formatMetricNumber, 
+  formatCompactNumber, 
+  buildPerformancePayload 
+} from './calendarMetrics';
 import './calendar.css';
 
 export default function AdvancedCalendar({ onOpenArchive }) {
@@ -35,8 +41,16 @@ export default function AdvancedCalendar({ onOpenArchive }) {
   const [postUrlInput, setPostUrlInput] = useState('');
   const [copiedLinkNotification, setCopiedLinkNotification] = useState(false);
   const [editModalState, setEditModalState] = useState(null); // null | { mode: 'create'|'edit', data: {...} }
-  const [deleteModalPost, setDeleteModalPost] = useState(null);
   const [copiedNotification, setCopiedNotification] = useState(false);
+  const [isEditingMetrics, setIsEditingMetrics] = useState(false);
+  const [metricInputs, setMetricInputs] = useState({
+    vues: '',
+    likes: '',
+    commentaires: '',
+    partages: '',
+    engagement: ''
+  });
+  const [metricsSaveSuccess, setMetricsSaveSuccess] = useState(false);
   const viewModalFileInputRef = useRef(null);
 
   // Safe external URL helper to avoid relative navigation
@@ -223,6 +237,11 @@ export default function AdvancedCalendar({ onOpenArchive }) {
         image: '',
         campaign: '',
         url: '',
+        vues: 0,
+        likes: 0,
+        commentaires: 0,
+        partages: 0,
+        engagement: 0,
         isSponsored: false,
         sponsoring: {
           isSponsored: false,
@@ -255,6 +274,7 @@ export default function AdvancedCalendar({ onOpenArchive }) {
 
   const handleOpenEditModal = (post) => {
     const normalizedSp = getNormalizedSponsoring(post);
+    const perf = getPostPerformance(post);
     setEditModalState({
       mode: 'edit',
       data: {
@@ -263,6 +283,11 @@ export default function AdvancedCalendar({ onOpenArchive }) {
         day: post.day || (post.date ? parseInt(post.date.split('-')[2], 10) : 19),
         desc: post.desc || post.description || '',
         url: post.url || post.link || '',
+        vues: perf.vues,
+        likes: perf.likes,
+        commentaires: perf.commentaires,
+        partages: perf.partages,
+        engagement: perf.engagement,
         isSponsored: normalizedSp.isSponsored,
         sponsoring: normalizedSp,
       }
@@ -285,8 +310,17 @@ export default function AdvancedCalendar({ onOpenArchive }) {
     };
 
     if (editModalState.mode === 'create') {
+      const perfPayload = buildPerformancePayload(
+        formData.vues,
+        formData.likes,
+        formData.commentaires,
+        formData.partages,
+        formData.engagement
+      );
+
       const newPost = {
         ...formData,
+        ...perfPayload,
         isSponsored,
         sponsoring: normalizedSponsoring,
         day: dayParsed,
@@ -309,8 +343,17 @@ export default function AdvancedCalendar({ onOpenArchive }) {
       }
     } else {
       // Edit mode
+      const perfPayload = buildPerformancePayload(
+        formData.vues,
+        formData.likes,
+        formData.commentaires,
+        formData.partages,
+        formData.engagement
+      );
+
       await updateCalendarPost(formData.id, {
         ...formData,
+        ...perfPayload,
         isSponsored,
         sponsoring: normalizedSponsoring,
         url: (formData.url || '').trim(),
@@ -337,6 +380,37 @@ export default function AdvancedCalendar({ onOpenArchive }) {
     setShowViewModalImageEditor(false);
     setIsEditingPostUrl(false);
     setPostUrlInput(post.url || post.link || '');
+    setIsEditingMetrics(false);
+    setMetricsSaveSuccess(false);
+
+    const perf = getPostPerformance(post);
+    setMetricInputs({
+      vues: perf.vues !== undefined ? String(perf.vues) : '0',
+      likes: perf.likes !== undefined ? String(perf.likes) : '0',
+      commentaires: perf.commentaires !== undefined ? String(perf.commentaires) : '0',
+      partages: perf.partages !== undefined ? String(perf.partages) : '0',
+      engagement: perf.engagement !== undefined ? String(perf.engagement) : '0'
+    });
+  };
+
+  const handleSavePostMetrics = async () => {
+    if (!viewModalPost) return;
+    const payload = buildPerformancePayload(
+      metricInputs.vues,
+      metricInputs.likes,
+      metricInputs.commentaires,
+      metricInputs.partages,
+      metricInputs.engagement
+    );
+
+    await updateCalendarPost(viewModalPost.id, payload);
+    setViewModalPost(prev => ({
+      ...prev,
+      ...payload
+    }));
+    setIsEditingMetrics(false);
+    setMetricsSaveSuccess(true);
+    setTimeout(() => setMetricsSaveSuccess(false), 3000);
   };
 
   const handleSavePostUrl = async (customUrl = null) => {
@@ -701,20 +775,29 @@ export default function AdvancedCalendar({ onOpenArchive }) {
                     </button>
                   </div>
 
-                  <div className="adv-month-posts-list">
-                    {dayPosts.map(post => (
-                      <div 
-                        key={post.id} 
-                        className={`adv-month-post-chip status-${(post.status || 'draft').toLowerCase()}`}
-                        onClick={() => handleOpenViewModal(post)}
-                        title={`${post.title} — ${post.canal} (${post.time})`}
-                      >
-                        <span>{getPlatformIcon(post.canal)}</span>
-                        <span className="adv-chip-time">{post.time}</span>
-                        <span className="adv-chip-title">{post.title}</span>
-                      </div>
-                    ))}
-                  </div>
+                    <div className="adv-month-posts-list">
+                      {dayPosts.map(post => {
+                        const perf = getPostPerformance(post);
+                        return (
+                          <div 
+                            key={post.id} 
+                            className={`adv-month-post-chip status-${(post.status || 'draft').toLowerCase()}`}
+                            onClick={() => handleOpenViewModal(post)}
+                            title={`${post.title} — ${post.canal} (${post.time}) ${perf.hasMetrics ? `| Vues: ${formatCompactNumber(perf.vues)} · Eng: ${formatCompactNumber(perf.engagement)}` : ''}`}
+                          >
+                            <span>{getPlatformIcon(post.canal)}</span>
+                            <span className="adv-chip-time">{post.time}</span>
+                            <span className="adv-chip-title">{post.title}</span>
+                            {perf.hasMetrics && (
+                              <div className="adv-month-post-metrics">
+                                <span className="metric-pill" title={`${formatMetricNumber(perf.vues)} vues`}>👁 {formatCompactNumber(perf.vues)}</span>
+                                <span className="metric-pill" style={{ color: '#ff9233' }} title={`${formatMetricNumber(perf.engagement)} engagements (${perf.tauxEngagement})`}>⚡ {formatCompactNumber(perf.engagement)}</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                 </div>
               );
             })}
@@ -791,6 +874,36 @@ export default function AdvancedCalendar({ onOpenArchive }) {
                           />
                         )}
                       </div>
+
+                      {/* Performance strip (Vues, Likes, Commentaires, Partages, Engagement) */}
+                      {(() => {
+                        const perf = getPostPerformance(post);
+                        if (!perf.hasMetrics) return null;
+                        return (
+                          <div className="adv-metrics-strip" title="Performances réelles enregistrées">
+                            <span className="adv-metric-item metric-views" title={`${formatMetricNumber(perf.vues)} Vues`}>
+                              <span className="metric-icon">👁</span>
+                              <span>{formatCompactNumber(perf.vues)}</span>
+                            </span>
+                            <span className="adv-metric-item metric-likes" title={`${formatMetricNumber(perf.likes)} Likes`}>
+                              <span className="metric-icon">❤️</span>
+                              <span>{formatCompactNumber(perf.likes)}</span>
+                            </span>
+                            <span className="adv-metric-item metric-comments" title={`${formatMetricNumber(perf.commentaires)} Commentaires`}>
+                              <span className="metric-icon">💬</span>
+                              <span>{formatCompactNumber(perf.commentaires)}</span>
+                            </span>
+                            <span className="adv-metric-item metric-shares" title={`${formatMetricNumber(perf.partages)} Partages`}>
+                              <span className="metric-icon">🔄</span>
+                              <span>{formatCompactNumber(perf.partages)}</span>
+                            </span>
+                            <span className="adv-metric-item metric-engagement" title={`Engagement cumulé : ${formatMetricNumber(perf.engagement)} interactions (${perf.tauxEngagement})`}>
+                              <span className="metric-icon">⚡</span>
+                              <span>{formatCompactNumber(perf.engagement)}</span>
+                            </span>
+                          </div>
+                        );
+                      })()}
                       
                       <div className="adv-post-footer">
                         <div className="adv-post-actions-left">
@@ -962,6 +1075,39 @@ export default function AdvancedCalendar({ onOpenArchive }) {
                                 <p className="text-sm text-slate-300 mb-10 leading-relaxed">
                                   {post.desc || post.description || 'Aucun texte descriptif.'}
                                 </p>
+
+                                {/* Performance strip (Vues, Likes, Commentaires, Partages, Engagement) */}
+                                {(() => {
+                                  const perf = getPostPerformance(post);
+                                  if (!perf.hasMetrics) return null;
+                                  return (
+                                    <div className="adv-metrics-strip mb-10" title="Performances réelles enregistrées">
+                                      <span className="adv-metric-item metric-views" title={`${formatMetricNumber(perf.vues)} Vues`}>
+                                        <span className="metric-icon">👁</span>
+                                        <span>{formatCompactNumber(perf.vues)} Vues</span>
+                                      </span>
+                                      <span className="adv-metric-item metric-likes" title={`${formatMetricNumber(perf.likes)} Likes`}>
+                                        <span className="metric-icon">❤️</span>
+                                        <span>{formatCompactNumber(perf.likes)}</span>
+                                      </span>
+                                      <span className="adv-metric-item metric-comments" title={`${formatMetricNumber(perf.commentaires)} Commentaires`}>
+                                        <span className="metric-icon">💬</span>
+                                        <span>{formatCompactNumber(perf.commentaires)}</span>
+                                      </span>
+                                      <span className="adv-metric-item metric-shares" title={`${formatMetricNumber(perf.partages)} Partages`}>
+                                        <span className="metric-icon">🔄</span>
+                                        <span>{formatCompactNumber(perf.partages)}</span>
+                                      </span>
+                                      <span className="adv-metric-item metric-engagement" title={`Engagement cumulé : ${formatMetricNumber(perf.engagement)} interactions`}>
+                                        <span className="metric-icon">⚡</span>
+                                        <span>{formatCompactNumber(perf.engagement)} Eng. cumulé</span>
+                                      </span>
+                                      <span className="adv-metric-item metric-rate" title={`Taux d'engagement : ${perf.tauxEngagement}`}>
+                                        <span>{perf.tauxEngagement}</span>
+                                      </span>
+                                    </div>
+                                  );
+                                })()}
 
                                 <div className="flex items-center gap-8">
                                   <button 
@@ -1398,6 +1544,282 @@ export default function AdvancedCalendar({ onOpenArchive }) {
                   {viewModalPost.desc || viewModalPost.description || 'Aucun contenu de texte saisi pour ce post.'}
                 </div>
               </div>
+
+              {/* ─── SECTION PERFORMANCES DU POST (VUES, LIKES, COMMENTAIRES, PARTAGES, ENGAGEMENT CUMULÉ) ─── */}
+              {(() => {
+                const currentPerf = getPostPerformance(viewModalPost);
+                return (
+                  <div className="adv-detail-perf-card">
+                    <div className="adv-detail-perf-header">
+                      <div className="adv-detail-perf-title">
+                        <span>📊</span>
+                        <span>Performances de la Publication</span>
+                        {currentPerf.hasMetrics ? (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/20 text-green-400 border border-green-500/30">
+                            Actives
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-300">
+                            Non renseignées
+                          </span>
+                        )}
+                        {metricsSaveSuccess && (
+                          <span className="text-xs font-bold text-green-400 animate-fade">
+                            ✓ Performances enregistrées
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-6">
+                        {!isEditingMetrics ? (
+                          <button
+                            type="button"
+                            className="btn btn-blue btn-xs"
+                            onClick={() => {
+                              setMetricInputs({
+                                vues: currentPerf.vues !== undefined ? String(currentPerf.vues) : '0',
+                                likes: currentPerf.likes !== undefined ? String(currentPerf.likes) : '0',
+                                commentaires: currentPerf.commentaires !== undefined ? String(currentPerf.commentaires) : '0',
+                                partages: currentPerf.partages !== undefined ? String(currentPerf.partages) : '0',
+                                engagement: currentPerf.engagement !== undefined ? String(currentPerf.engagement) : '0'
+                              });
+                              setIsEditingMetrics(true);
+                            }}
+                          >
+                            ✏️ {currentPerf.hasMetrics ? 'Modifier les métriques' : 'Renseigner les métriques'}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-xs text-slate-400 hover:text-white"
+                            onClick={() => setIsEditingMetrics(false)}
+                          >
+                            Annuler
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {!isEditingMetrics ? (
+                      <div>
+                        <div className="adv-detail-perf-grid">
+                          <div className="adv-perf-stat-box">
+                            <div className="adv-perf-stat-label">
+                              <span>👁</span>
+                              <span>Vues</span>
+                            </div>
+                            <div className="adv-perf-stat-val text-sky-400">
+                              {formatMetricNumber(currentPerf.vues)}
+                            </div>
+                          </div>
+
+                          <div className="adv-perf-stat-box">
+                            <div className="adv-perf-stat-label">
+                              <span>❤️</span>
+                              <span>Likes</span>
+                            </div>
+                            <div className="adv-perf-stat-val text-rose-400">
+                              {formatMetricNumber(currentPerf.likes)}
+                            </div>
+                          </div>
+
+                          <div className="adv-perf-stat-box">
+                            <div className="adv-perf-stat-label">
+                              <span>💬</span>
+                              <span>Commentaires</span>
+                            </div>
+                            <div className="adv-perf-stat-val text-amber-400">
+                              {formatMetricNumber(currentPerf.commentaires)}
+                            </div>
+                          </div>
+
+                          <div className="adv-perf-stat-box">
+                            <div className="adv-perf-stat-label">
+                              <span>🔄</span>
+                              <span>Partages</span>
+                            </div>
+                            <div className="adv-perf-stat-val text-purple-400">
+                              {formatMetricNumber(currentPerf.partages)}
+                            </div>
+                          </div>
+
+                          <div className="adv-perf-stat-box adv-perf-stat-highlight">
+                            <div className="adv-perf-stat-label" style={{ color: '#ff9233' }}>
+                              <span>⚡</span>
+                              <span>Engagement cumulé</span>
+                            </div>
+                            <div className="adv-perf-stat-val font-black">
+                              {formatMetricNumber(currentPerf.engagement)}
+                            </div>
+                          </div>
+
+                          <div className="adv-perf-stat-box adv-perf-stat-rate">
+                            <div className="adv-perf-stat-label" style={{ color: '#34d399' }}>
+                              <span>📈</span>
+                              <span>Taux d'engagement</span>
+                            </div>
+                            <div className="adv-perf-stat-val">
+                              {currentPerf.tauxEngagement}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5 text-[11px] text-slate-400">
+                          <span>
+                            ℹ️ Engagement cumulé = Somme des interactions (Likes + Commentaires + Partages ou total direct).
+                          </span>
+                          <button
+                            type="button"
+                            className="text-orange-400 hover:text-orange-300 font-semibold underline"
+                            onClick={() => {
+                              setMetricInputs({
+                                vues: currentPerf.vues !== undefined ? String(currentPerf.vues) : '0',
+                                likes: currentPerf.likes !== undefined ? String(currentPerf.likes) : '0',
+                                commentaires: currentPerf.commentaires !== undefined ? String(currentPerf.commentaires) : '0',
+                                partages: currentPerf.partages !== undefined ? String(currentPerf.partages) : '0',
+                                engagement: currentPerf.engagement !== undefined ? String(currentPerf.engagement) : '0'
+                              });
+                              setIsEditingMetrics(true);
+                            }}
+                          >
+                            Modifier manuellement
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Formulaire d'édition manuelle des métriques */
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleSavePostMetrics();
+                        }}
+                        className="p-12 bg-slate-900/90 rounded-lg border border-orange-500/40 animate-fade space-y-3"
+                      >
+                        <div className="text-xs text-slate-300 font-medium mb-2">
+                          ✏️ <strong>Saisie manuelle des performances :</strong> modifiez les compteurs réels de la publication.
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-[10px] font-bold text-sky-400 uppercase mb-1">
+                              👁 Vues
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={metricInputs.vues}
+                              onChange={(e) => setMetricInputs(prev => ({ ...prev, vues: e.target.value }))}
+                              className="w-full bg-[#0d1017] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:border-orange-500 outline-none"
+                              placeholder="0"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-rose-400 uppercase mb-1">
+                              ❤️ Likes
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={metricInputs.likes}
+                              onChange={(e) => setMetricInputs(prev => ({ ...prev, likes: e.target.value }))}
+                              className="w-full bg-[#0d1017] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:border-orange-500 outline-none"
+                              placeholder="0"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-amber-400 uppercase mb-1">
+                              💬 Commentaires
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={metricInputs.commentaires}
+                              onChange={(e) => setMetricInputs(prev => ({ ...prev, commentaires: e.target.value }))}
+                              className="w-full bg-[#0d1017] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:border-orange-500 outline-none"
+                              placeholder="0"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-purple-400 uppercase mb-1">
+                              🔄 Partages
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={metricInputs.partages}
+                              onChange={(e) => setMetricInputs(prev => ({ ...prev, partages: e.target.value }))}
+                              className="w-full bg-[#0d1017] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:border-orange-500 outline-none"
+                              placeholder="0"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-orange-400 uppercase mb-1">
+                              ⚡ Engagement Cumulé
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={metricInputs.engagement}
+                              onChange={(e) => setMetricInputs(prev => ({ ...prev, engagement: e.target.value }))}
+                              className="w-full bg-[#0d1017] border border-orange-500/50 rounded-lg px-2.5 py-1.5 text-xs text-orange-400 font-bold font-mono focus:border-orange-500 outline-none"
+                              placeholder="Automatique ou manuel"
+                            />
+                          </div>
+
+                          <div className="flex flex-col justify-end">
+                            <button
+                              type="button"
+                              className="w-full py-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold rounded-lg border border-white/10 transition"
+                              onClick={() => {
+                                const l = parseInt(metricInputs.likes || 0, 10) || 0;
+                                const c = parseInt(metricInputs.commentaires || 0, 10) || 0;
+                                const p = parseInt(metricInputs.partages || 0, 10) || 0;
+                                setMetricInputs(prev => ({ ...prev, engagement: String(l + c + p) }));
+                              }}
+                              title="Calculer automatiquement : Likes + Commentaires + Partages"
+                            >
+                              ⚡ Calculer Somme
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Preview du taux d'engagement calculé en direct */}
+                        {(() => {
+                          const v = parseInt(metricInputs.vues || 0, 10) || 0;
+                          const eng = parseInt(metricInputs.engagement || 0, 10) || 0;
+                          const calcRate = v > 0 ? ((eng / v) * 100).toFixed(2) + '%' : '0%';
+                          return (
+                            <div className="text-[11px] text-slate-400 flex items-center justify-between bg-slate-950/60 p-2 rounded border border-white/5">
+                              <span>Taux d'engagement estimé : <strong className="text-emerald-400">{calcRate}</strong></span>
+                              <span className="text-[10px] text-slate-500">(Calculé sur les vues réelles)</span>
+                            </div>
+                          );
+                        })()}
+
+                        <div className="flex justify-end gap-6 pt-2">
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => setIsEditingMetrics(false)}
+                          >
+                            Annuler
+                          </button>
+                          <button
+                            type="submit"
+                            className="btn btn-orange btn-sm"
+                          >
+                            💾 Enregistrer les performances
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* ─── SECTION SPONSORING & MÉDIA PAYANT (BUDGET, AUDIENCE, CONVERSION) ─── */}
               <PostSponsoringSection 
@@ -1858,6 +2280,140 @@ export default function AdvancedCalendar({ onOpenArchive }) {
                       </div>
                     </div>
                   )}
+                </div>
+
+                {/* ─── PERFORMANCES DU CONTENU (SAISIE / MODIFICATION MANUELLE DES KPIS CM) ─── */}
+                <div className="pub-form-group bg-[#131722] p-3.5 rounded-xl border border-white/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <span className="text-emerald-400">📊</span>
+                        <span>Performances de la Publication (Vues, Likes, Commentaires, Partages, Engagement)</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">
+                        Saisie manuelle des résultats mesurés sur les réseaux sociaux.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-2 border-t border-white/5">
+                    <div>
+                      <label className="block text-[10px] font-bold text-sky-400 uppercase mb-1">
+                        👁 Vues
+                      </label>
+                      <input 
+                        className="pub-form-input font-mono text-xs" 
+                        type="number" 
+                        min="0"
+                        placeholder="0"
+                        value={editModalState.data.vues ?? 0}
+                        onChange={e => setEditModalState(prev => ({
+                          ...prev,
+                          data: { ...prev.data, vues: e.target.value }
+                        }))}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-rose-400 uppercase mb-1">
+                        ❤️ Likes
+                      </label>
+                      <input 
+                        className="pub-form-input font-mono text-xs" 
+                        type="number" 
+                        min="0"
+                        placeholder="0"
+                        value={editModalState.data.likes ?? 0}
+                        onChange={e => setEditModalState(prev => ({
+                          ...prev,
+                          data: { ...prev.data, likes: e.target.value }
+                        }))}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-amber-400 uppercase mb-1">
+                        💬 Commentaires
+                      </label>
+                      <input 
+                        className="pub-form-input font-mono text-xs" 
+                        type="number" 
+                        min="0"
+                        placeholder="0"
+                        value={editModalState.data.commentaires ?? 0}
+                        onChange={e => setEditModalState(prev => ({
+                          ...prev,
+                          data: { ...prev.data, commentaires: e.target.value }
+                        }))}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-purple-400 uppercase mb-1">
+                        🔄 Partages
+                      </label>
+                      <input 
+                        className="pub-form-input font-mono text-xs" 
+                        type="number" 
+                        min="0"
+                        placeholder="0"
+                        value={editModalState.data.partages ?? 0}
+                        onChange={e => setEditModalState(prev => ({
+                          ...prev,
+                          data: { ...prev.data, partages: e.target.value }
+                        }))}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-orange-400 uppercase mb-1">
+                        ⚡ Engagement
+                      </label>
+                      <input 
+                        className="pub-form-input font-mono text-xs text-orange-400 font-bold" 
+                        type="number" 
+                        min="0"
+                        placeholder="Auto"
+                        value={editModalState.data.engagement ?? ''}
+                        onChange={e => setEditModalState(prev => ({
+                          ...prev,
+                          data: { ...prev.data, engagement: e.target.value }
+                        }))}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5 text-[11px] text-slate-400">
+                    <button
+                      type="button"
+                      className="text-xs text-orange-400 hover:text-orange-300 font-semibold"
+                      onClick={() => {
+                        const l = parseInt(editModalState.data.likes || 0, 10) || 0;
+                        const c = parseInt(editModalState.data.commentaires || 0, 10) || 0;
+                        const p = parseInt(editModalState.data.partages || 0, 10) || 0;
+                        setEditModalState(prev => ({
+                          ...prev,
+                          data: { ...prev.data, engagement: l + c + p }
+                        }));
+                      }}
+                    >
+                      ⚡ Calculer Engagement Cumulé (Likes + Commentaires + Partages)
+                    </button>
+                    <span>
+                      Taux estimé : <strong className="text-emerald-400 font-mono">
+                        {(() => {
+                          const v = parseInt(editModalState.data.vues || 0, 10) || 0;
+                          const l = parseInt(editModalState.data.likes || 0, 10) || 0;
+                          const c = parseInt(editModalState.data.commentaires || 0, 10) || 0;
+                          const p = parseInt(editModalState.data.partages || 0, 10) || 0;
+                          const eng = editModalState.data.engagement !== undefined && editModalState.data.engagement !== '' && !isNaN(editModalState.data.engagement)
+                            ? parseInt(editModalState.data.engagement, 10)
+                            : (l + c + p);
+                          return v > 0 ? ((eng / v) * 100).toFixed(2) + '%' : '0%';
+                        })()}
+                      </strong>
+                    </span>
+                  </div>
                 </div>
               </div>
 

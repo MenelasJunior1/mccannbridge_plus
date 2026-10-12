@@ -1340,3 +1340,182 @@
   animation: fadeIn 0.2s ease;
 }
 
+/* ─── Metrics & Performance Display on Calendar Cards & Modals ─── */
+.adv-metrics-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 5px 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+
+.adv-metric-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #cbd5e1;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.adv-metric-item .metric-icon {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+.adv-metric-item.metric-views {
+  color: #38bdf8;
+}
+
+.adv-metric-item.metric-likes {
+  color: #f43f5e;
+}
+
+.adv-metric-item.metric-comments {
+  color: #fbbf24;
+}
+
+.adv-metric-item.metric-shares {
+  color: #a855f7;
+}
+
+.adv-metric-item.metric-engagement {
+  color: #ff9233;
+  font-weight: 700;
+  background: rgba(255, 121, 0, 0.12);
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 121, 0, 0.3);
+}
+
+.adv-metric-item.metric-rate {
+  color: #34d399;
+  font-weight: 700;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.adv-month-post-metrics {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9.5px;
+  color: #94a3b8;
+  margin-top: 2px;
+  padding-left: 2px;
+}
+
+.adv-month-post-metrics .metric-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 600;
+}
+
+/* ─── Detail Modal Performance Section ─── */
+.adv-detail-perf-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.85) 100%);
+  border: 1px solid rgba(255, 121, 0, 0.35);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.adv-detail-perf-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, #ff7900, #f97316, #10b981);
+}
+
+.adv-detail-perf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.adv-detail-perf-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.adv-detail-perf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.adv-perf-stat-box {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+  padding: 10px 12px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.adv-perf-stat-box:hover {
+  border-color: rgba(255, 121, 0, 0.4);
+  transform: translateY(-1px);
+}
+
+.adv-perf-stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.adv-perf-stat-val {
+  font-size: 16px;
+  font-weight: 900;
+  font-family: monospace;
+  color: #fff;
+}
+
+.adv-perf-stat-highlight {
+  background: rgba(255, 121, 0, 0.08);
+  border-color: rgba(255, 121, 0, 0.3);
+}
+
+.adv-perf-stat-highlight .adv-perf-stat-val {
+  color: #ff9233;
+}
+
+.adv-perf-stat-rate {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.adv-perf-stat-rate .adv-perf-stat-val {
+  color: #34d399;
+}
+
+
