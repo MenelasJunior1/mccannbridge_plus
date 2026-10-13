@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { CM_DATA } from '../../data/community';
 import { useApp } from '../../context/AppContext';
 import AdvancedCalendar from './sections/AdvancedCalendar';
 import ArchiveModal from './sections/ArchiveModal';
 import AdsSponsoringSection from './sections/AdsSponsoringSection';
 import PublicationImageManager from './sections/PublicationImageManager';
+import CommunityCreationStudio from './sections/CommunityCreationStudio';
 import { getPostPerformance, formatMetricNumber } from './sections/calendarMetrics';
 
 const FMT = (n) => n.toLocaleString('fr-FR');
@@ -359,50 +361,58 @@ function CmCreation({ onNavigate }) {
   const filtered = filter === 'all' ? publications : publications.filter(p => p.plateforme === filter);
 
   const getStatutClass = (s) => {
-    if (s === 'Brouillon') return 'tag-muted';
-    if (s === 'À corriger') return 'tag-red';
-    if (s === 'Validé') return 'tag-green';
-    if (s === 'En validation') return 'tag-yellow';
-    if (s === 'Programmé') return 'tag-blue';
-    if (s === 'Publié') return 'tag-purple-solid';
+    const val = String(s || '').toLowerCase();
+    if (val.includes('brouillon') || val === 'draft') return 'tag-muted';
+    if (val.includes('corriger')) return 'tag-red';
+    if (val.includes('validé') || val.includes('valide')) return 'tag-green';
+    if (val.includes('validation') || val === 'pending') return 'tag-yellow';
+    if (val.includes('programme') || val.includes('programmé') || val === 'scheduled') return 'tag-blue';
+    if (val.includes('publi') || val === 'published') return 'tag-purple-solid';
     return 'tag-muted';
   };
 
   const getActionButton = (p) => {
-    switch (p.statut) {
-      case 'Brouillon':
-      case 'À corriger':
-        return (
-          <button className="btn btn-orange btn-sm" onClick={() => submitForValidation(p.id, p.title)}>
-            📤 Soumettre
-          </button>
-        );
-      case 'En validation':
-        return <span className="tag tag-yellow" style={{ fontSize: 11 }}>⏳ En attente</span>;
-      case 'Validé':
-        return <span className="tag tag-green" style={{ fontSize: 11 }}>✅ Validé</span>;
-      case 'Programmé':
-        return <span className="tag tag-blue" style={{ fontSize: 11 }}>📅 Programmé</span>;
-      case 'Publié':
-        return <span className="tag tag-purple-solid" style={{ fontSize: 11 }}>🚀 Publié</span>;
-      default:
-        return <button className="btn btn-ghost btn-sm">{p.action || 'Éditer'}</button>;
+    const s = String(p.statut || p.status || 'Brouillon');
+    if (s === 'Brouillon' || s === 'DRAFT' || s === 'À corriger') {
+      return (
+        <button className="btn btn-orange btn-sm" onClick={() => submitForValidation(p.id, p.title)}>
+          📤 Soumettre
+        </button>
+      );
     }
+    if (s === 'En validation' || s === 'PENDING') {
+      return <span className="tag tag-yellow" style={{ fontSize: 11 }}>⏳ En attente</span>;
+    }
+    if (s === 'Validé') {
+      return <span className="tag tag-green" style={{ fontSize: 11 }}>✅ Validé</span>;
+    }
+    if (s === 'Programmé' || s === 'SCHEDULED') {
+      return <span className="tag tag-blue" style={{ fontSize: 11 }}>📅 Programmé</span>;
+    }
+    if (s === 'Publié' || s === 'PUBLISHED') {
+      return <span className="tag tag-purple-solid" style={{ fontSize: 11 }}>🚀 Publié</span>;
+    }
+    return <button className="btn btn-ghost btn-sm">{p.action || 'Éditer'}</button>;
   };
 
   return (
     <div className="cm-section-card">
       <div className="cm-section-head">
         <div className="cm-tag-header cm-tag-orange">CRÉATION / ADAPTATION PAR PLATEFORME</div>
-        <button className="btn btn-green btn-sm" onClick={() => setShowCreate(true)}>+ Créer</button>
+        <button 
+          className="btn btn-green btn-sm" 
+          onClick={() => onNavigate ? onNavigate('creation') : setShowCreate(true)}
+        >
+          + Créer
+        </button>
       </div>
 
       {/* Quick stats */}
       <div className="pub-quick-stats">
-        <div className="pub-stat"><span className="pub-stat-num">{publications.filter(p => p.statut === 'Brouillon').length}</span><span className="pub-stat-label">Brouillons</span></div>
-        <div className="pub-stat"><span className="pub-stat-num pub-stat-orange">{publications.filter(p => p.statut === 'En validation').length}</span><span className="pub-stat-label">En validation</span></div>
+        <div className="pub-stat"><span className="pub-stat-num">{publications.filter(p => (p.statut === 'Brouillon' || p.status === 'DRAFT')).length}</span><span className="pub-stat-label">Brouillons</span></div>
+        <div className="pub-stat"><span className="pub-stat-num pub-stat-orange">{publications.filter(p => (p.statut === 'En validation' || p.status === 'PENDING')).length}</span><span className="pub-stat-label">En validation</span></div>
         <div className="pub-stat"><span className="pub-stat-num pub-stat-green">{publications.filter(p => p.statut === 'Validé').length}</span><span className="pub-stat-label">Validés</span></div>
-        <div className="pub-stat"><span className="pub-stat-num pub-stat-blue">{publications.filter(p => p.statut === 'Programmé').length}</span><span className="pub-stat-label">Programmés</span></div>
+        <div className="pub-stat"><span className="pub-stat-num pub-stat-blue">{publications.filter(p => (p.statut === 'Programmé' || p.status === 'SCHEDULED')).length}</span><span className="pub-stat-label">Programmés</span></div>
       </div>
 
       <div className="cm-platform-filters">
@@ -426,8 +436,12 @@ function CmCreation({ onNavigate }) {
               ? 'Créez votre première publication pour lancer le flux de validation et de diffusion.'
               : 'Aucune publication trouvée pour ce filtre.'}
           </div>
-          <button className="btn btn-orange btn-sm" style={{ marginTop: 12 }} onClick={() => setShowCreate(true)}>
-            + Créer une publication
+          <button 
+            className="btn btn-orange btn-sm" 
+            style={{ marginTop: 12 }} 
+            onClick={() => onNavigate ? onNavigate('creation') : setShowCreate(true)}
+          >
+            + Ouvrir le studio de création
           </button>
         </div>
       ) : (
@@ -444,10 +458,14 @@ function CmCreation({ onNavigate }) {
           <tbody>
             {filtered.map(p => (
               <tr key={p.id} className="pub-table-row animate-fade">
-                <td className="font-semibold">{p.title}</td>
-                <td>{p.plateforme}</td>
-                <td className="text-muted">{p.format}</td>
-                <td className="text-center"><span className={`tag ${getStatutClass(p.statut)}`}>{p.statut.toUpperCase()}</span></td>
+                <td className="font-semibold">{p.title || 'Sans titre'}</td>
+                <td>{p.plateforme || 'Facebook'}</td>
+                <td className="text-muted">{p.format || 'Image'}</td>
+                <td className="text-center">
+                  <span className={`tag ${getStatutClass(p.statut || p.status)}`}>
+                    {(p.statut || p.status || 'Brouillon').toUpperCase()}
+                  </span>
+                </td>
                 <td className="text-center">{getActionButton(p)}</td>
               </tr>
             ))}
@@ -467,8 +485,8 @@ function CmCreation({ onNavigate }) {
 
 /* ─── CmValidation (dynamic) ─── */
 function CmValidation() {
-  const { publications, submitForValidation, validatePublication, rejectPublication, schedulePublication } = useApp();
-  const pendingPubs = publications.filter(p => p.statut === 'En validation');
+  const { publications = [], submitForValidation, validatePublication, rejectPublication, schedulePublication } = useApp();
+  const pendingPubs = publications.filter(p => p.statut === 'En validation' || p.status === 'PENDING');
   const correctionPubs = publications.filter(p => p.statut === 'À corriger');
 
   return (
@@ -683,13 +701,13 @@ function CalendrierTab({ onOpenArchive }) {
   return <AdvancedCalendar onOpenArchive={onOpenArchive} />;
 }
 
-function CreationTab() {
-  return <CmCreation />;
+function CreationTab({ onNavigate }) {
+  return <CommunityCreationStudio onNavigate={onNavigate} />;
 }
 
 function ValidationTab() {
-  const { publications, validatePublication, rejectPublication, submitForValidation } = useApp();
-  const pendingPubs = publications.filter(p => p.statut === 'En validation');
+  const { publications = [], validatePublication, rejectPublication, submitForValidation } = useApp();
+  const pendingPubs = publications.filter(p => p.statut === 'En validation' || p.status === 'PENDING');
   const correctionPubs = publications.filter(p => p.statut === 'À corriger');
 
   return (
@@ -764,10 +782,10 @@ function ValidationTab() {
 }
 
 function PublicationTab() {
-  const { publications, schedulePublication, publishPublication } = useApp();
+  const { publications = [], schedulePublication, publishPublication } = useApp();
   const validatedPubs = publications.filter(p => p.statut === 'Validé');
-  const scheduledPubs = publications.filter(p => p.statut === 'Programmé');
-  const publishedPubs = publications.filter(p => p.statut === 'Publié');
+  const scheduledPubs = publications.filter(p => p.statut === 'Programmé' || p.status === 'SCHEDULED');
+  const publishedPubs = publications.filter(p => p.statut === 'Publié' || p.status === 'PUBLISHED');
   const [scheduleTarget, setScheduleTarget] = useState(null);
 
   return (
@@ -885,24 +903,42 @@ function RapportsTab() {
 /* ─── Main Page ─── */
 
 export default function CalendarPage() {
-  const [activeSection, setActiveSection] = useState('home');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') || searchParams.get('section');
+  const [activeSection, setActiveSection] = useState(tabFromUrl || 'home');
   const [showArchive, setShowArchive] = useState(false);
-  const { publications } = useApp();
+  const { publications = [] } = useApp();
 
-  const validationCount = publications.filter(p => p.statut === 'En validation').length;
-  const publicationCount = publications.filter(p => p.statut === 'Validé' || p.statut === 'Programmé').length;
+  useEffect(() => {
+    const currentTab = searchParams.get('tab') || searchParams.get('section');
+    if (currentTab && currentTab !== activeSection) {
+      setActiveSection(currentTab);
+    }
+  }, [searchParams]);
+
+  const handleSelectSection = (sectionId) => {
+    setActiveSection(sectionId);
+    setSearchParams(prev => {
+      const sp = new URLSearchParams(prev);
+      sp.set('tab', sectionId);
+      return sp;
+    }, { replace: true });
+  };
+
+  const validationCount = publications.filter(p => p.statut === 'En validation' || p.status === 'PENDING').length;
+  const publicationCount = publications.filter(p => p.statut === 'Validé' || p.statut === 'Programmé' || p.status === 'SCHEDULED').length;
 
   const renderContent = () => {
     switch (activeSection) {
-      case 'home': return <HomeTab onNavigate={setActiveSection} />;
+      case 'home': return <HomeTab onNavigate={handleSelectSection} />;
       case 'calendrier': return <CalendrierTab onOpenArchive={() => setShowArchive(true)} />;
-      case 'creation': return <CreationTab onNavigate={setActiveSection} />;
+      case 'creation': return <CreationTab onNavigate={handleSelectSection} />;
       case 'validation': return <ValidationTab />;
       case 'publication': return <PublicationTab />;
       case 'ads': return <AdsTab />;
-      case 'briefs': return <BriefsTab onNavigate={setActiveSection} />;
+      case 'briefs': return <BriefsTab onNavigate={handleSelectSection} />;
       case 'rapports': return <RapportsTab />;
-      default: return <HomeTab onNavigate={setActiveSection} />;
+      default: return <HomeTab onNavigate={handleSelectSection} />;
     }
   };
 
@@ -931,7 +967,7 @@ export default function CalendarPage() {
               <button
                 key={s.id}
                 className={`cm-sidebar-item ${activeSection === s.id ? 'active' : ''}`}
-                onClick={() => setActiveSection(s.id)}
+                onClick={() => handleSelectSection(s.id)}
               >
                 <span className="cm-sidebar-icon">{s.icon}</span>
                 <span>{s.label}</span>
@@ -960,8 +996,8 @@ export default function CalendarPage() {
             <p className="cm-subtitle">Cycle de vie complet du contenu : calendrier, validation, publication et modération.</p>
           </div>
           <div className="cm-header-actions">
-            <button className="btn btn-ghost btn-sm">📨 Recevoir un brief</button>
-            <button className="btn btn-orange btn-sm" onClick={() => setActiveSection('creation')}>+ Nouveau post</button>
+            <button className="btn btn-ghost btn-sm" onClick={() => handleSelectSection('briefs')}>📨 Recevoir un brief</button>
+            <button className="btn btn-orange btn-sm" onClick={() => handleSelectSection('creation')}>+ Nouveau post</button>
             <div className="cm-header-user">
               <div className="cm-header-user-avatar">CM</div>
               <span>Community Manager</span>
