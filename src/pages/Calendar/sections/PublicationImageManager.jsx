@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 
 /**
  * Resizes and optimizes image files locally before converting to Data URL.

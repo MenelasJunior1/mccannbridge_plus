@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { CM_DATA } from '../../../data/community';
 import { useApp } from '../../../context/AppContext';
 import PublicationImageManager, { processImageFile, BRAND_IMAGE_PRESETS } from './PublicationImageManager';
@@ -12,7 +12,13 @@ import {
 import './calendar.css';
 
 export default function AdvancedCalendar({ onOpenArchive }) {
-  const calData = CM_DATA.advancedCalendar;
+  const calData = CM_DATA?.advancedCalendar || {
+    clients: ['Orange Telco', 'Orange Money', 'Orange Business', 'Orange LinkedIn', 'Orange Digital Center', 'Orange WhatssApp', 'Max it', 'Site web'],
+    types: ['Feed', 'Réels et Story', 'Carrousel'],
+    formats: ['Portraits', 'Paysage'],
+    canaux: ['Facebook', 'Instagram', 'LinkedIn', 'X', 'TikTok', 'Chaine WhatsApp'],
+    posts: []
+  };
   const { 
     calendarPosts = [], 
     addCalendarPost, 
@@ -37,6 +43,7 @@ export default function AdvancedCalendar({ onOpenArchive }) {
   const [viewModalImgError, setViewModalImgError] = useState(false);
   const [showViewModalImageEditor, setShowViewModalImageEditor] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
+  const [deleteModalPost, setDeleteModalPost] = useState(null);
   const [isEditingPostUrl, setIsEditingPostUrl] = useState(false);
   const [postUrlInput, setPostUrlInput] = useState('');
   const [copiedLinkNotification, setCopiedLinkNotification] = useState(false);
@@ -95,7 +102,8 @@ export default function AdvancedCalendar({ onOpenArchive }) {
 
   // ─── Filtered Posts ───
   const filteredPosts = useMemo(() => {
-    return calendarPosts.filter(p => {
+    return (Array.isArray(calendarPosts) ? calendarPosts : []).filter(p => {
+      if (!p) return false;
       // Client filter
       if (filterClient !== 'All' && p.client !== filterClient) return false;
       // Canal filter
@@ -696,7 +704,7 @@ export default function AdvancedCalendar({ onOpenArchive }) {
             onChange={(e) => setFilterClient(e.target.value)}
           >
             <option value="All">🏢 Tous les Clients</option>
-            {calData.clients.map(c => <option key={c} value={c}>{c}</option>)}
+            {(calData?.clients || []).map(c => <option key={c} value={c}>{c}</option>)}
           </select>
 
           {/* Canal Filter */}
@@ -707,7 +715,7 @@ export default function AdvancedCalendar({ onOpenArchive }) {
             onChange={(e) => setFilterCanal(e.target.value)}
           >
             <option value="All">📱 Tous les Canaux</option>
-            {calData.canaux.map(c => <option key={c} value={c}>{c}</option>)}
+            {(calData?.canaux || []).map(c => <option key={c} value={c}>{c}</option>)}
           </select>
 
           {/* Status Filter */}

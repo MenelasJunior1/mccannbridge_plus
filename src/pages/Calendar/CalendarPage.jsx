@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, Component } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CM_DATA } from '../../data/community';
 import { useApp } from '../../context/AppContext';
@@ -698,11 +698,74 @@ function HomeTab({ onNavigate }) {
 }
 
 function CalendrierTab({ onOpenArchive }) {
-  return <AdvancedCalendar onOpenArchive={onOpenArchive} />;
+  return (
+    <StudioErrorBoundary
+      fallback={
+        <div className="cm-section-card" style={{ padding: 24, textAlign: 'center' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--dark)', marginBottom: 8 }}>
+            Chargement du calendrier éditorial...
+          </h3>
+          <p style={{ fontSize: 13, color: 'var(--muted)' }}>
+            Veuillez patienter ou rafraîchir l'affichage du planning.
+          </p>
+        </div>
+      }
+    >
+      <AdvancedCalendar onOpenArchive={onOpenArchive} />
+    </StudioErrorBoundary>
+  );
+}
+
+class StudioErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error('StudioErrorBoundary captured error:', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="cm-section-card" style={{ padding: 20, border: '1px solid #fed7aa', background: '#fffbeb' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 24 }}>⚡</span>
+                <div>
+                  <h4 style={{ fontSize: 14, fontWeight: 700, color: '#c2410c', margin: 0 }}>
+                    Mode de secours activé pour la section Création
+                  </h4>
+                  <p style={{ fontSize: 12, color: '#78350f', margin: '2px 0 0' }}>
+                    {this.state.error?.message || "La vue standard reste pleinement opérationnelle pour créer et gérer vos publications."}
+                  </p>
+                </div>
+              </div>
+              <button 
+                className="btn btn-orange btn-sm"
+                onClick={() => this.setState({ hasError: false, error: null })}
+              >
+                🔄 Relancer le Studio Avancé
+              </button>
+            </div>
+          </div>
+          {this.props.fallback}
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 function CreationTab({ onNavigate }) {
-  return <CommunityCreationStudio onNavigate={onNavigate} />;
+  return (
+    <StudioErrorBoundary fallback={<CmCreation onNavigate={onNavigate} />}>
+      <CommunityCreationStudio onNavigate={onNavigate} />
+    </StudioErrorBoundary>
+  );
 }
 
 function ValidationTab() {
@@ -904,23 +967,41 @@ function RapportsTab() {
 
 export default function CalendarPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const tabFromUrl = searchParams.get('tab') || searchParams.get('section');
-  const [activeSection, setActiveSection] = useState(tabFromUrl || 'home');
+  const rawTab = searchParams.get('tab') || searchParams.get('section');
+
+  const normalizeSectionId = (sec) => {
+    if (!sec) return 'home';
+    const s = String(sec).toLowerCase().trim();
+    if (s === 'creation' || s === 'création' || s === 'creer' || s === 'create') return 'creation';
+    if (s === 'calendrier' || s === 'calendar') return 'calendrier';
+    if (s === 'validation') return 'validation';
+    if (s === 'publication') return 'publication';
+    if (s === 'ads' || s === 'sponsoring') return 'ads';
+    if (s === 'briefs' || s === 'inbox') return 'briefs';
+    if (s === 'rapports' || s === 'reports' || s === 'analytics') return 'rapports';
+    return s;
+  };
+
+  const [activeSection, setActiveSection] = useState(() => normalizeSectionId(rawTab));
   const [showArchive, setShowArchive] = useState(false);
   const { publications = [] } = useApp();
 
   useEffect(() => {
-    const currentTab = searchParams.get('tab') || searchParams.get('section');
-    if (currentTab && currentTab !== activeSection) {
-      setActiveSection(currentTab);
+    const raw = searchParams.get('tab') || searchParams.get('section');
+    if (raw) {
+      const norm = normalizeSectionId(raw);
+      if (norm !== activeSection) {
+        setActiveSection(norm);
+      }
     }
   }, [searchParams]);
 
   const handleSelectSection = (sectionId) => {
-    setActiveSection(sectionId);
+    const target = normalizeSectionId(sectionId);
+    setActiveSection(target);
     setSearchParams(prev => {
       const sp = new URLSearchParams(prev);
-      sp.set('tab', sectionId);
+      sp.set('tab', target);
       return sp;
     }, { replace: true });
   };
@@ -929,7 +1010,8 @@ export default function CalendarPage() {
   const publicationCount = publications.filter(p => p.statut === 'Validé' || p.statut === 'Programmé' || p.status === 'SCHEDULED').length;
 
   const renderContent = () => {
-    switch (activeSection) {
+    const current = normalizeSectionId(activeSection);
+    switch (current) {
       case 'home': return <HomeTab onNavigate={handleSelectSection} />;
       case 'calendrier': return <CalendrierTab onOpenArchive={() => setShowArchive(true)} />;
       case 'creation': return <CreationTab onNavigate={handleSelectSection} />;

@@ -44,7 +44,7 @@ import {
 
 import { getInitialCommunityPosts } from '../pages/Calendar/sections/calendarMetrics';
 
-const AppContext = createContext(null);
+export const AppContext = createContext(null);
 
 // Load publications from localStorage fallback (empty by default)
 const loadSavedPublications = () => {

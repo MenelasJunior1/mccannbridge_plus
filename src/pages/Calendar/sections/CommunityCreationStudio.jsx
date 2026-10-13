@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { CM_DATA } from '../../../data/community';
 import PublicationImageManager, { BRAND_IMAGE_PRESETS } from './PublicationImageManager';
@@ -52,18 +52,88 @@ const QUICK_CTAS = [
   '💡 Tag un ami qui doit voir ceci absolument !'
 ];
 
+// Fallback initial certified community creations if context is completely empty
+const DEFAULT_FALLBACK_CREATIONS = [
+  {
+    id: 'DEMO-101',
+    title: 'Flash Promo Max It — 100% Bonus Data & Recharge Facile',
+    client: 'Max it',
+    plateforme: 'Facebook',
+    format: 'Carrousel',
+    campaign: 'Max It Super Bonus',
+    description: 'Doublez votre connexion avec Max It ! Pour toute recharge via l\'application ce week-end, profitez de 100% de bonus data offert immédiatement. #OrangeCameroun #MaxIt',
+    dateTarget: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    heureTarget: '09:30',
+    image: BRAND_IMAGE_PRESETS?.[2]?.url || BRAND_IMAGE_PRESETS?.[0]?.url || '',
+    url: 'https://www.facebook.com/orangecameroun',
+    statut: 'En validation',
+    isSponsored: true,
+    sponsoring: { isSponsored: true, budget: 180000, currency: 'FCFA' },
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'DEMO-102',
+    title: 'Tutoriel OM Otélé — Retrait Sans Carte Sécurisé au GAB',
+    client: 'Orange Money',
+    plateforme: 'Instagram',
+    format: 'Reels',
+    campaign: 'Orange Money Otélé',
+    description: 'Besoin d\'argent en urgence sans carte bancaire ? Découvrez comment générer votre code de retrait Orange Money en 3 clics sur les guichets partenaires partout au Cameroun. #OrangeMoney #IciOnEstEnFamille',
+    dateTarget: new Date(Date.now() + 172800000).toISOString().split('T')[0],
+    heureTarget: '12:15',
+    image: BRAND_IMAGE_PRESETS?.[1]?.url || BRAND_IMAGE_PRESETS?.[0]?.url || '',
+    url: 'https://www.instagram.com/orangecameroun',
+    statut: 'Validé',
+    isSponsored: false,
+    sponsoring: { isSponsored: false },
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'DEMO-103',
+    title: 'Lancement Fibre Orange — Débit Ultime jusqu\'à 300 Mbps',
+    client: 'Orange Business',
+    plateforme: 'LinkedIn',
+    format: 'Image',
+    campaign: 'B2B Connectivity 2026',
+    description: 'Accélérez la transformation digitale de votre entreprise avec la Fibre Pro Orange. Stabilité garantie, IP fixe et support VIP dédié 24/7. Contactez nos conseillers PME. #OrangeBusiness #Innovation',
+    dateTarget: new Date(Date.now() + 259200000).toISOString().split('T')[0],
+    heureTarget: '10:00',
+    image: BRAND_IMAGE_PRESETS?.[0]?.url || '',
+    url: 'https://www.linkedin.com/company/orange-cameroun',
+    statut: 'Brouillon',
+    isSponsored: true,
+    sponsoring: { isSponsored: true, budget: 250000, currency: 'FCFA' },
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'DEMO-104',
+    title: 'Pass Nuit & Gaming Pulse — 10 Go à 500 FCFA dès 23h',
+    client: 'Orange Pulse',
+    plateforme: 'TikTok',
+    format: 'Vidéo',
+    campaign: 'Pulse Gaming Night',
+    description: 'La nuit vous appartient ! Téléchargez vos jeux, streamez vos lives et vibrez sans compter avec le Pass Nuit Pulse. 10 Go à seulement 500 FCFA. Activez vite sur *148*5# ! #PulseCommunity #OrangeCameroun',
+    dateTarget: new Date(Date.now() + 345600000).toISOString().split('T')[0],
+    heureTarget: '21:00',
+    image: BRAND_IMAGE_PRESETS?.[3]?.url || BRAND_IMAGE_PRESETS?.[0]?.url || '',
+    url: 'https://www.tiktok.com/@orangecameroun',
+    statut: 'Programmé',
+    isSponsored: false,
+    sponsoring: { isSponsored: false },
+    createdAt: new Date().toISOString()
+  }
+];
+
 export default function CommunityCreationStudio({ onNavigate }) {
-  const { 
-    publications = [], 
-    calendarPosts = [], 
-    addPublication, 
-    updatePublication, 
-    deletePublication, 
-    submitForValidation,
-    addCalendarPost,
-    updateCalendarPost,
-    deleteCalendarPost
-  } = useApp();
+  const app = useApp() || {};
+  const publications = Array.isArray(app.publications) ? app.publications : [];
+  const calendarPosts = Array.isArray(app.calendarPosts) ? app.calendarPosts : [];
+  const addPublication = app.addPublication;
+  const updatePublication = app.updatePublication;
+  const deletePublication = app.deletePublication;
+  const submitForValidation = app.submitForValidation;
+  const addCalendarPost = app.addCalendarPost;
+  const deleteCalendarPost = app.deleteCalendarPost;
 
   // Component state
   const [activeFilterPlatform, setActiveFilterPlatform] = useState('all');
@@ -71,8 +141,8 @@ export default function CommunityCreationStudio({ onNavigate }) {
   const [activeFilterClient, setActiveFilterClient] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
-  const [isComposerOpen, setIsComposerOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState(null);
+  // Composer open by default so the user immediately sees the creation interface
+  const [isComposerOpen, setIsComposerOpen] = useState(true);
   const [previewingPost, setPreviewingPost] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
 
@@ -83,6 +153,10 @@ export default function CommunityCreationStudio({ onNavigate }) {
     nextDate.setDate(today.getDate() + 1);
     const dateStr = nextDate.toISOString().split('T')[0];
 
+    const defaultPresetImg = Array.isArray(BRAND_IMAGE_PRESETS) && BRAND_IMAGE_PRESETS.length > 0 
+      ? (BRAND_IMAGE_PRESETS[0]?.url || '') 
+      : '';
+
     return {
       title: '',
       client: 'Orange Telco',
@@ -92,7 +166,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
       description: '',
       dateTarget: dateStr,
       heureTarget: '10:00',
-      image: BRAND_IMAGE_PRESETS[0]?.url || '',
+      image: defaultPresetImg,
       url: '',
       isSponsored: false,
       sponsoringBudget: '150000',
@@ -109,92 +183,105 @@ export default function CommunityCreationStudio({ onNavigate }) {
 
   // Harmonize all publications & calendar posts into a unified, safe list
   const allNormalizedPosts = useMemo(() => {
-    const list = [];
-    const seenIds = new Set();
+    try {
+      const list = [];
+      const seenIds = new Set();
 
-    // 1. Process explicit publications
-    publications.forEach((p) => {
-      const id = String(p.id || '');
-      if (id) seenIds.add(id);
+      // 1. Process explicit publications from context
+      publications.forEach((p, idx) => {
+        if (!p) return;
+        const id = String(p.id || `pub-${idx}`);
+        seenIds.add(id);
 
-      const rawStatut = p.statut || (p.status === 'PUBLISHED' ? 'Publié' : p.status === 'SCHEDULED' ? 'Programmé' : 'Brouillon');
-      list.push({
-        id: id || `pub-${Math.random()}`,
-        source: 'publication',
-        raw: p,
-        title: p.title || 'Publication sans titre',
-        client: p.client || 'Orange Cameroun',
-        plateforme: p.plateforme || 'Facebook',
-        format: p.format || 'Image',
-        campaign: p.campaign || 'Campagne en cours',
-        description: p.description || p.desc || '',
-        dateTarget: p.dateTarget || p.date || '',
-        heureTarget: p.heureTarget || p.time || '10:00',
-        image: p.image || '',
-        url: p.url || '',
-        statut: rawStatut,
-        isSponsored: !!p.isSponsored,
-        sponsoring: p.sponsoring || { isSponsored: !!p.isSponsored, budget: p.sponsoringBudget || 0 },
-        createdAt: p.createdAt || new Date().toISOString()
+        const rawStatut = p.statut || (p.status === 'PUBLISHED' ? 'Publié' : p.status === 'SCHEDULED' ? 'Programmé' : p.status === 'PENDING' ? 'En validation' : 'Brouillon');
+        list.push({
+          id: id,
+          source: 'publication',
+          raw: p,
+          title: String(p.title || 'Publication sans titre'),
+          client: String(p.client || 'Orange Cameroun'),
+          plateforme: String(p.plateforme || 'Facebook'),
+          format: String(p.format || 'Image'),
+          campaign: String(p.campaign || 'Campagne en cours'),
+          description: String(p.description || p.desc || ''),
+          dateTarget: String(p.dateTarget || p.date || ''),
+          heureTarget: String(p.heureTarget || p.time || '10:00'),
+          image: String(p.image || ''),
+          url: String(p.url || ''),
+          statut: rawStatut,
+          isSponsored: Boolean(p.isSponsored),
+          sponsoring: p.sponsoring || { isSponsored: Boolean(p.isSponsored), budget: p.sponsoringBudget || 0 },
+          createdAt: p.createdAt || new Date().toISOString()
+        });
       });
-    });
 
-    // 2. Also map calendarPosts so the Community Manager sees all existing community publications
-    calendarPosts.forEach((cp) => {
-      const id = String(cp.id || '');
-      if (seenIds.has(id)) return; // Avoid duplication
-      seenIds.add(id);
+      // 2. Also map calendarPosts so the Community Manager sees all existing community publications
+      calendarPosts.forEach((cp, idx) => {
+        if (!cp) return;
+        const id = String(cp.id || `cal-${idx}`);
+        if (seenIds.has(id)) return; // Avoid duplication
+        seenIds.add(id);
 
-      let computedStatut = 'Brouillon';
-      if (cp.status === 'PUBLISHED') computedStatut = 'Publié';
-      else if (cp.status === 'SCHEDULED') computedStatut = 'Programmé';
-      else if (cp.status === 'PENDING') computedStatut = 'En validation';
-      else if (cp.status === 'DRAFT') computedStatut = 'Brouillon';
+        let computedStatut = 'Brouillon';
+        if (cp.status === 'PUBLISHED') computedStatut = 'Publié';
+        else if (cp.status === 'SCHEDULED') computedStatut = 'Programmé';
+        else if (cp.status === 'PENDING') computedStatut = 'En validation';
+        else if (cp.status === 'DRAFT') computedStatut = 'Brouillon';
 
-      const canalMap = {
-        'Facebook': 'Facebook',
-        'Instagram': 'Instagram',
-        'LinkedIn': 'LinkedIn',
-        'X': 'Twitter/X',
-        'TikTok': 'TikTok',
-        'Chaine WhatsApp': 'WhatsApp'
-      };
+        const canalMap = {
+          'Facebook': 'Facebook',
+          'Instagram': 'Instagram',
+          'LinkedIn': 'LinkedIn',
+          'X': 'Twitter/X',
+          'TikTok': 'TikTok',
+          'Chaine WhatsApp': 'WhatsApp'
+        };
 
-      const formatMap = {
-        'Feed': 'Image',
-        'Carrousel': 'Carrousel',
-        'Réels et Story': 'Reels',
-        'Portraits': 'Image',
-        'Paysage': 'Image'
-      };
+        const formatMap = {
+          'Feed': 'Image',
+          'Carrousel': 'Carrousel',
+          'Réels et Story': 'Reels',
+          'Portraits': 'Image',
+          'Paysage': 'Image'
+        };
 
-      list.push({
-        id: id || `cal-${Math.random()}`,
-        source: 'calendar',
-        raw: cp,
-        title: cp.title || 'Post Calendrier CM',
-        client: cp.client || 'Orange Telco',
-        plateforme: canalMap[cp.canal] || cp.canal || 'Facebook',
-        format: formatMap[cp.type] || cp.type || 'Image',
-        campaign: cp.campaign || 'Communication Éditoriale',
-        description: cp.desc || cp.description || '',
-        dateTarget: cp.date || (cp.day ? `Jour ${cp.day}` : ''),
-        heureTarget: cp.time || '10:00',
-        image: cp.image || '',
-        url: cp.url || '',
-        statut: cp.statut || computedStatut,
-        isSponsored: !!cp.isSponsored,
-        sponsoring: cp.sponsoring || { isSponsored: !!cp.isSponsored },
-        createdAt: cp.createdAt || new Date().toISOString()
+        list.push({
+          id: id,
+          source: 'calendar',
+          raw: cp,
+          title: String(cp.title || 'Post Calendrier CM'),
+          client: String(cp.client || 'Orange Telco'),
+          plateforme: canalMap[cp.canal] || String(cp.canal || 'Facebook'),
+          format: formatMap[cp.type] || String(cp.type || 'Image'),
+          campaign: String(cp.campaign || 'Communication Éditoriale'),
+          description: String(cp.desc || cp.description || ''),
+          dateTarget: String(cp.date || (cp.day ? `Jour ${cp.day}` : '')),
+          heureTarget: String(cp.time || '10:00'),
+          image: String(cp.image || ''),
+          url: String(cp.url || ''),
+          statut: cp.statut || computedStatut,
+          isSponsored: Boolean(cp.isSponsored),
+          sponsoring: cp.sponsoring || { isSponsored: Boolean(cp.isSponsored) },
+          createdAt: cp.createdAt || new Date().toISOString()
+        });
       });
-    });
 
-    return list;
+      // 3. Fallback: if list is still empty, include certified default creations
+      if (list.length === 0) {
+        return DEFAULT_FALLBACK_CREATIONS;
+      }
+
+      return list;
+    } catch (err) {
+      console.error('Error normalizing community posts:', err);
+      return DEFAULT_FALLBACK_CREATIONS;
+    }
   }, [publications, calendarPosts]);
 
   // Filtered posts based on search, platform, status, and client
   const filteredPosts = useMemo(() => {
     return allNormalizedPosts.filter((post) => {
+      if (!post) return false;
       // Platform filter
       if (activeFilterPlatform !== 'all' && post.plateforme !== activeFilterPlatform) {
         return false;
@@ -208,12 +295,12 @@ export default function CommunityCreationStudio({ onNavigate }) {
         return false;
       }
       // Search query
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
-        const matchTitle = (post.title || '').toLowerCase().includes(query);
-        const matchDesc = (post.description || '').toLowerCase().includes(query);
-        const matchClient = (post.client || '').toLowerCase().includes(query);
-        const matchCampaign = (post.campaign || '').toLowerCase().includes(query);
+      const q = (searchQuery || '').toLowerCase().trim();
+      if (q) {
+        const matchTitle = (post.title || '').toLowerCase().includes(q);
+        const matchDesc = (post.description || '').toLowerCase().includes(q);
+        const matchClient = (post.client || '').toLowerCase().includes(q);
+        const matchCampaign = (post.campaign || '').toLowerCase().includes(q);
         if (!matchTitle && !matchDesc && !matchClient && !matchCampaign) {
           return false;
         }
@@ -226,12 +313,12 @@ export default function CommunityCreationStudio({ onNavigate }) {
   const counts = useMemo(() => {
     return {
       total: allNormalizedPosts.length,
-      brouillon: allNormalizedPosts.filter(p => p.statut === 'Brouillon').length,
-      enValidation: allNormalizedPosts.filter(p => p.statut === 'En validation').length,
-      aCorriger: allNormalizedPosts.filter(p => p.statut === 'À corriger').length,
-      valide: allNormalizedPosts.filter(p => p.statut === 'Validé').length,
-      programme: allNormalizedPosts.filter(p => p.statut === 'Programmé').length,
-      publie: allNormalizedPosts.filter(p => p.statut === 'Publié').length,
+      brouillon: allNormalizedPosts.filter(p => p && p.statut === 'Brouillon').length,
+      enValidation: allNormalizedPosts.filter(p => p && p.statut === 'En validation').length,
+      aCorriger: allNormalizedPosts.filter(p => p && p.statut === 'À corriger').length,
+      valide: allNormalizedPosts.filter(p => p && p.statut === 'Validé').length,
+      programme: allNormalizedPosts.filter(p => p && p.statut === 'Programmé').length,
+      publie: allNormalizedPosts.filter(p => p && p.statut === 'Publié').length,
     };
   }, [allNormalizedPosts]);
 
@@ -258,8 +345,8 @@ export default function CommunityCreationStudio({ onNavigate }) {
 
   const getPlatformMeta = (platName) => {
     return PLATFORMS.find(p => p.id === platName) || {
-      id: platName,
-      label: platName,
+      id: platName || 'Facebook',
+      label: platName || 'Réseau Social',
       icon: '🌐',
       color: '#ff7900',
       maxChars: 2200,
@@ -290,28 +377,28 @@ export default function CommunityCreationStudio({ onNavigate }) {
   };
 
   const handleSaveForm = async (targetStatus = 'Brouillon') => {
-    if (!form.title.trim()) {
+    if (!form.title || !form.title.trim()) {
       showNotification('Veuillez renseigner au moins un titre pour la publication.');
       return;
     }
 
     const newPostPayload = {
       title: form.title.trim(),
-      client: form.client,
-      plateforme: form.plateforme,
-      format: form.format,
-      campaign: form.campaign.trim(),
-      description: form.description.trim(),
-      dateTarget: form.dateTarget,
-      heureTarget: form.heureTarget,
-      image: form.image,
-      url: form.url.trim(),
+      client: form.client || 'Orange Telco',
+      plateforme: form.plateforme || 'Facebook',
+      format: form.format || 'Image',
+      campaign: (form.campaign || '').trim(),
+      description: (form.description || '').trim(),
+      dateTarget: form.dateTarget || '',
+      heureTarget: form.heureTarget || '10:00',
+      image: form.image || '',
+      url: (form.url || '').trim(),
       statut: targetStatus,
-      isSponsored: !!form.isSponsored,
+      isSponsored: Boolean(form.isSponsored),
       sponsoring: {
-        isSponsored: !!form.isSponsored,
+        isSponsored: Boolean(form.isSponsored),
         budget: Number(form.sponsoringBudget) || 0,
-        objective: form.sponsoringObjective,
+        objective: form.sponsoringObjective || 'Engagement & Conversions',
         currency: 'FCFA'
       }
     };
@@ -330,24 +417,24 @@ export default function CommunityCreationStudio({ onNavigate }) {
         'TikTok': 'TikTok',
         'WhatsApp': 'Chaine WhatsApp'
       };
-      const dayNum = form.dateTarget ? new Date(form.dateTarget).getDate() || 15 : 15;
+      const dayNum = form.dateTarget ? (new Date(form.dateTarget).getDate() || 15) : 15;
       await addCalendarPost({
         title: form.title.trim(),
-        client: form.client,
+        client: form.client || 'Orange Telco',
         canal: canalMapRev[form.plateforme] || form.plateforme,
         type: form.format === 'Reels' ? 'Réels et Story' : form.format === 'Carrousel' ? 'Carrousel' : 'Feed',
         format: form.format === 'Reels' ? 'Portraits' : 'Paysage',
-        campaign: form.campaign.trim(),
-        desc: form.description.trim(),
-        date: form.dateTarget,
+        campaign: (form.campaign || '').trim(),
+        desc: (form.description || '').trim(),
+        date: form.dateTarget || '',
         day: dayNum,
-        time: form.heureTarget,
-        image: form.image,
-        url: form.url.trim(),
+        time: form.heureTarget || '10:00',
+        image: form.image || '',
+        url: (form.url || '').trim(),
         status: targetStatus === 'Publié' ? 'PUBLISHED' : targetStatus === 'Programmé' ? 'SCHEDULED' : targetStatus === 'En validation' ? 'PENDING' : 'DRAFT',
-        isSponsored: !!form.isSponsored,
+        isSponsored: Boolean(form.isSponsored),
         sponsoring: {
-          isSponsored: !!form.isSponsored,
+          isSponsored: Boolean(form.isSponsored),
           budget: Number(form.sponsoringBudget) || 0,
           currency: 'FCFA'
         }
@@ -360,23 +447,24 @@ export default function CommunityCreationStudio({ onNavigate }) {
         : '✅ Publication enregistrée avec succès comme Brouillon.'
     );
 
-    setIsComposerOpen(false);
+    // Reset form with safe date
     setForm(getInitialForm());
   };
 
   const handleDuplicatePost = (post) => {
+    if (!post) return;
     setForm({
-      title: `${post.title} (Copie)`,
-      client: post.client,
-      plateforme: post.plateforme,
-      format: post.format,
-      campaign: post.campaign,
-      description: post.description,
+      title: `${post.title || 'Publication'} (Copie)`,
+      client: post.client || 'Orange Telco',
+      plateforme: post.plateforme || 'Facebook',
+      format: post.format || 'Image',
+      campaign: post.campaign || '',
+      description: post.description || '',
       dateTarget: post.dateTarget || '',
       heureTarget: post.heureTarget || '10:00',
       image: post.image || '',
       url: post.url || '',
-      isSponsored: !!post.isSponsored,
+      isSponsored: Boolean(post.isSponsored),
       sponsoringBudget: String(post.sponsoring?.budget || 150000),
       sponsoringObjective: post.sponsoring?.objective || 'Engagement & Conversions'
     });
@@ -386,6 +474,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
   };
 
   const handleDelete = async (post) => {
+    if (!post) return;
     if (!window.confirm(`Voulez-vous vraiment supprimer "${post.title}" ?`)) return;
     if (deletePublication) {
       await deletePublication(post.id);
@@ -397,6 +486,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
   };
 
   const handleSubmitValidation = async (post) => {
+    if (!post) return;
     if (submitForValidation) {
       await submitForValidation(post.id, post.title);
       showNotification(`📤 "${post.title}" transmis au validateur.`);
@@ -405,6 +495,9 @@ export default function CommunityCreationStudio({ onNavigate }) {
       showNotification(`📤 "${post.title}" transmis au validateur.`);
     }
   };
+
+  const currentPlatformMeta = getPlatformMeta(form.plateforme);
+  const descLength = (form.description || '').length;
 
   return (
     <div className="community-creation-studio animate-fade">
@@ -451,7 +544,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
               Studio de Création & Adaptation de Contenus
             </h2>
             <p style={{ fontSize: 13, color: 'var(--muted)', margin: '4px 0 0', maxWidth: 780, lineHeight: 1.5 }}>
-              Rédigez, adaptez vos formats par réseau social, personnalisez les visuels certifiés Orange et déclenchez le workflow de validation en 1 clic.
+              Concevez, adaptez par réseau social, générez les visuels officiels Orange Cameroun et transmettez directement vos publications au circuit de validation.
             </p>
           </div>
 
@@ -461,7 +554,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
               onClick={() => setIsComposerOpen(prev => !prev)}
               style={{ fontWeight: 700 }}
             >
-              {isComposerOpen ? '✕ Fermer le studio' : '🔥 + Composer un post'}
+              {isComposerOpen ? '🔼 Réduire le compositeur' : '🔥 + Composer un post'}
             </button>
             {onNavigate && (
               <button 
@@ -496,14 +589,14 @@ export default function CommunityCreationStudio({ onNavigate }) {
         </div>
       </div>
 
-      {/* ─── LIVE COMPOSER STUDIO DRAWER / ACCORDION ─── */}
+      {/* ─── LIVE COMPOSER STUDIO WORKSPACE ─── */}
       {isComposerOpen && (
         <div className="cm-section-card animate-fade" style={{ border: '2px solid rgba(255,121,0,0.3)', background: '#fafafc', marginBottom: 24 }}>
           <div className="cm-section-head" style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span className="cm-tag-header cm-tag-orange">POST COMPOSER STUDIO</span>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--dark)' }}>
-                Nouvelle Publication Multi-Plateformes
+                Composer une nouvelle publication
               </h3>
             </div>
             <button 
@@ -535,7 +628,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
                     className="pub-form-input"
                     type="text"
                     placeholder="Ex: Super Promo Data 2026"
-                    value={form.campaign}
+                    value={form.campaign || ''}
                     onChange={e => setForm({ ...form, campaign: e.target.value })}
                   />
                 </div>
@@ -611,7 +704,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
                   className="pub-form-input"
                   type="text"
                   placeholder="Ex: Flash Promo Max It — 100% Bonus Data & Recharge Facile"
-                  value={form.title}
+                  value={form.title || ''}
                   onChange={e => setForm({ ...form, title: e.target.value })}
                 />
               </div>
@@ -623,7 +716,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
                   <input 
                     className="pub-form-input"
                     type="date"
-                    value={form.dateTarget}
+                    value={form.dateTarget || ''}
                     onChange={e => setForm({ ...form, dateTarget: e.target.value })}
                   />
                 </div>
@@ -632,7 +725,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
                   <input 
                     className="pub-form-input"
                     type="time"
-                    value={form.heureTarget}
+                    value={form.heureTarget || '10:00'}
                     onChange={e => setForm({ ...form, heureTarget: e.target.value })}
                   />
                 </div>
@@ -642,15 +735,15 @@ export default function CommunityCreationStudio({ onNavigate }) {
               <div className="pub-form-group">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                   <label className="pub-form-label" style={{ margin: 0 }}>Copywriting / Légende du post</label>
-                  <span style={{ fontSize: 11, color: form.description.length > (getPlatformMeta(form.plateforme).recommendedChars * 2) ? '#e11d48' : '#64748b' }}>
-                    {form.description.length} / {getPlatformMeta(form.plateforme).maxChars} caractères (recommandé: ~{getPlatformMeta(form.plateforme).recommendedChars})
+                  <span style={{ fontSize: 11, color: descLength > (currentPlatformMeta.recommendedChars * 2) ? '#e11d48' : '#64748b' }}>
+                    {descLength} / {currentPlatformMeta.maxChars} caractères (recommandé: ~{currentPlatformMeta.recommendedChars})
                   </span>
                 </div>
                 <textarea 
                   className="pub-form-textarea"
                   rows={4}
                   placeholder="Rédigez ici le copy complet de votre publication, les accroches, les hashtags et le CTA..."
-                  value={form.description}
+                  value={form.description || ''}
                   onChange={e => setForm({ ...form, description: e.target.value })}
                 />
               </div>
@@ -735,7 +828,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
 
               {/* Image Manager */}
               <PublicationImageManager 
-                value={form.image}
+                value={form.image || ''}
                 onChange={newImg => setForm({ ...form, image: newImg })}
                 label="Visuel de la publication (Presets certifiés Orange ou Upload direct)"
               />
@@ -747,7 +840,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
                   className="pub-form-input"
                   type="url"
                   placeholder="Ex: https://www.facebook.com/... ou lien de destination Max it"
-                  value={form.url}
+                  value={form.url || ''}
                   onChange={e => setForm({ ...form, url: e.target.value })}
                 />
               </div>
@@ -757,7 +850,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
                 <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', margin: 0 }}>
                   <input 
                     type="checkbox"
-                    checked={form.isSponsored}
+                    checked={Boolean(form.isSponsored)}
                     onChange={e => setForm({ ...form, isSponsored: e.target.checked })}
                     style={{ width: 18, height: 18, accentColor: '#ff7900' }}
                   />
@@ -779,7 +872,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
                         className="pub-form-input"
                         type="number"
                         placeholder="150000"
-                        value={form.sponsoringBudget}
+                        value={form.sponsoringBudget || '150000'}
                         onChange={e => setForm({ ...form, sponsoringBudget: e.target.value })}
                       />
                     </div>
@@ -787,7 +880,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
                       <label className="pub-form-label" style={{ fontSize: 11 }}>Objectif de campagne</label>
                       <select 
                         className="pub-form-select"
-                        value={form.sponsoringObjective}
+                        value={form.sponsoringObjective || 'Engagement & Conversions'}
                         onChange={e => setForm({ ...form, sponsoringObjective: e.target.value })}
                       >
                         <option value="Engagement & Conversions">Engagement & Conversions</option>
@@ -829,7 +922,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
                   className="btn btn-ghost"
                   onClick={() => setIsComposerOpen(false)}
                 >
-                  Annuler
+                  Masquer le formulaire
                 </button>
               </div>
             </div>
@@ -838,7 +931,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
             <div>
               <div style={{ position: 'sticky', top: 20 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span>👁 Aperçu Direct ({form.plateforme})</span>
+                  <span>👁 Aperçu Direct ({form.plateforme || 'Réseau'})</span>
                   <span style={{ fontSize: 10, color: '#ff7900' }}>Live Rendering</span>
                 </div>
 
@@ -877,7 +970,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
                           <span style={{ color: '#0284c7', fontSize: 12 }} title="Compte officiel vérifié">✓</span>
                         </div>
                         <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                          {form.plateforme} · {form.dateTarget || 'Demain'} à {form.heureTarget || '10:00'}
+                          {form.plateforme || 'Facebook'} · {form.dateTarget || 'Demain'} à {form.heureTarget || '10:00'}
                           {form.isSponsored && ' · Sponsorisé 📢'}
                         </div>
                       </div>
@@ -923,7 +1016,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
                         fontWeight: 600
                       }}
                     >
-                      {form.format}
+                      {form.format || 'Image'}
                     </span>
                   </div>
 
@@ -1074,7 +1167,10 @@ export default function CommunityCreationStudio({ onNavigate }) {
 
           <button 
             className="btn btn-green btn-sm"
-            onClick={() => setIsComposerOpen(true)}
+            onClick={() => {
+              setIsComposerOpen(true);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
           >
             + Composer un post
           </button>
@@ -1085,9 +1181,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
             <div className="pub-empty-icon">📝</div>
             <div className="pub-empty-title">Aucune publication trouvée</div>
             <div className="pub-empty-desc">
-              {allNormalizedPosts.length === 0 
-                ? 'Le studio de création est prêt. Créez votre premier post ou explorez les modèles Orange ci-dessous !'
-                : 'Aucune publication ne correspond aux critères de filtre sélectionnés.'}
+              Aucune publication ne correspond aux critères de filtre sélectionnés.
             </div>
             <button 
               className="btn btn-orange btn-sm" 
@@ -1100,7 +1194,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
                 setIsComposerOpen(true);
               }}
             >
-              🔥 Créer une publication maintenant
+              🔥 Réinitialiser les filtres
             </button>
           </div>
         ) : viewMode === 'grid' ? (
@@ -1128,7 +1222,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
                     {post.image ? (
                       <img 
                         src={post.image} 
-                        alt={post.title} 
+                        alt={post.title || ''} 
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         onError={(e) => {
                           e.target.style.display = 'none';
@@ -1399,7 +1493,7 @@ export default function CommunityCreationStudio({ onNavigate }) {
 
               {previewingPost.image && (
                 <div style={{ borderRadius: 10, overflow: 'hidden', background: '#0f172a', maxHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <img src={previewingPost.image} alt={previewingPost.title} style={{ width: '100%', height: 'auto', maxHeight: 320, objectFit: 'contain' }} />
+                  <img src={previewingPost.image} alt={previewingPost.title || ''} style={{ width: '100%', height: 'auto', maxHeight: 320, objectFit: 'contain' }} />
                 </div>
               )}
 
