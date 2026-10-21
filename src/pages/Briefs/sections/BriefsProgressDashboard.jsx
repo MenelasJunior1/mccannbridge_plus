@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AlertTriangle, CalendarDays, FileText, Plus, Rocket, UserRound } from 'lucide-react';
 import { BRIEF_STATUSES } from '../../../data/briefs';
 import { formatCurrency } from '../../../utils/helpers';
 
@@ -20,26 +21,8 @@ export default function BriefsProgressDashboard({ briefs, onSelectBrief, perspec
   if (briefs.length === 0) {
     return (
       <div className="briefs-dashboard-container animate-fade">
-        <div className={`perspective-banner ${perspective === 'client' ? 'client-mode' : 'agency-mode'}`}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div className="perspective-icon">{perspective === 'client' ? '🟠' : '🏢'}</div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: 14 }}>
-                {perspective === 'client'
-                  ? 'Vue Client (Orange Cameroun) — Suivi de l’avancement modulaire & des livrables'
-                  : 'Vue Agence (McCann Douala) — Pilotage des alertes Go-Live, charges créa & dev'}
-              </div>
-              <div style={{ fontSize: 12, opacity: 0.9 }}>
-                {perspective === 'client'
-                  ? 'Contrôlez en temps réel la progression des sous-modules (Audio, UX, Recette) et validez les étapes clés.'
-                  : 'Surveillez les échéances critiques de lancement (J-X), le respect des rétro-plannings et la conformité des livrables.'}
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="card" style={{ textAlign: 'center', padding: '60px 20px', margin: '20px 0', borderRadius: 12 }}>
-          <div style={{ fontSize: 44, marginBottom: 12 }}>📋</div>
+          <FileText size={34} style={{ margin: '0 auto 16px' }} />
           <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: 'var(--dark)' }}>
             Aucun brief enregistré
           </h3>
@@ -48,7 +31,7 @@ export default function BriefsProgressDashboard({ briefs, onSelectBrief, perspec
           </p>
           {onNewBrief && (
             <button className="btn btn-primary" onClick={onNewBrief} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <span>+</span> Créer un nouveau brief
+              <Plus size={16} /> Créer un nouveau brief
             </button>
           )}
         </div>
@@ -59,32 +42,13 @@ export default function BriefsProgressDashboard({ briefs, onSelectBrief, perspec
   return (
     <div className="briefs-dashboard-container animate-fade">
       
-      {/* Perspective Info Banner */}
-      <div className={`perspective-banner ${perspective === 'client' ? 'client-mode' : 'agency-mode'}`}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div className="perspective-icon">{perspective === 'client' ? '🟠' : '🏢'}</div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: 14 }}>
-              {perspective === 'client'
-                ? 'Vue Client (Orange Cameroun) — Suivi de l’avancement modulaire & des livrables'
-                : 'Vue Agence (McCann Douala) — Pilotage des alertes Go-Live, charges créa & dev'}
-            </div>
-            <div style={{ fontSize: 12, opacity: 0.9 }}>
-              {perspective === 'client'
-                ? 'Contrôlez en temps réel la progression des sous-modules (Audio, UX, Recette) et validez les étapes clés.'
-                : 'Surveillez les échéances critiques de lancement (J-X), le respect des rétro-plannings et la conformité des livrables.'}
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Top Grid: Critical Alerts & Active Briefs Status */}
       <div className="dashboard-grid-cards">
         
         {/* Left Card: Active Briefs Selector */}
         <div className="card" style={{ flex: 1 }}>
           <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>
-            📋 Briefs en Cours d'Exécution ({briefs.filter(b => b.status === 'in_progress' || b.status === 'uat').length})
+            <FileText size={16} /> Briefs en cours ({briefs.filter(b => b.status === 'in_progress' || b.status === 'uat').length})
           </h3>
           <div className="briefs-mini-list">
             {briefs.map(b => {
@@ -106,7 +70,7 @@ export default function BriefsProgressDashboard({ briefs, onSelectBrief, perspec
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span className="brief-id-tag" style={{ fontSize: 10 }}>{b.id}</span>
                     <span className="tag" style={{ background: statusMeta.bg, color: statusMeta.color, fontSize: 10 }}>
-                      {statusMeta.icon} {statusMeta.shortLabel}
+                      {statusMeta.shortLabel}
                     </span>
                   </div>
 
@@ -123,7 +87,7 @@ export default function BriefsProgressDashboard({ briefs, onSelectBrief, perspec
 
                   {days !== null && (
                     <div style={{ fontSize: 10, color: days <= 15 ? 'var(--red)' : 'var(--muted)', marginTop: 4 }}>
-                      🚀 Go-Live : {days > 0 ? `dans ${days} jours (${b.goLiveDate})` : 'Aujourd’hui'}
+                      <Rocket size={12} /> Lancement : {days > 0 ? `dans ${days} jours (${b.goLiveDate})` : 'Aujourd’hui'}
                     </div>
                   )}
                 </div>
@@ -135,7 +99,7 @@ export default function BriefsProgressDashboard({ briefs, onSelectBrief, perspec
         {/* Right Card: Critical Go-Live Deadlines & Alerts (Special Agence & Client) */}
         <div className="card" style={{ flex: 1 }}>
           <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>
-            ⚡ Alertes Rétro-planning & Go-Live
+            <AlertTriangle size={16} /> Alertes planning et lancement
           </h3>
           <div className="critical-alerts-list">
             {criticalBriefs.slice(0, 4).map(cb => {
@@ -223,8 +187,8 @@ export default function BriefsProgressDashboard({ briefs, onSelectBrief, perspec
                     />
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 10, color: 'var(--muted)' }}>
-                    <span>👤 {m.owner}</span>
-                    <span>{m.dueDate ? `📅 ${m.dueDate}` : ''}</span>
+                    <span><UserRound size={11} /> {m.owner}</span>
+                    <span>{m.dueDate ? <><CalendarDays size={11} /> {m.dueDate}</> : ''}</span>
                   </div>
                 </div>
               ))}

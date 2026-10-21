@@ -267,7 +267,7 @@ export default function InfluencePage() {
   return (
     <div className="dashboard-analytics-page animate-fade" style={{ paddingBottom: 60 }}>
       {/* ─── 1. TOP HEADER AVEC SWITCHER DE VUE CLIENT / AGENCE ─── */}
-      <div className="flex justify-between items-center flex-wrap gap-14 mb-20">
+      <div className="bridge-module-head flex justify-between items-center flex-wrap gap-14 mb-20">
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <h1 style={{ fontSize: 24, fontWeight: 900, margin: 0, letterSpacing: '-0.5px', color: 'var(--dark)' }}>

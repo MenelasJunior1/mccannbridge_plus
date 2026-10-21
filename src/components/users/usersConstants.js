@@ -73,7 +73,7 @@ export const MODULES_RBAC = [
   { id: 'reports', label: 'Reporting & Insights', desc: 'Rapports mensuels de performance et analyses de ROI' },
   { id: 'finance', label: 'Suivi Financier', desc: 'Budgets engagés, devis, facturation et temps passés' },
   { id: 'assistant_ia', label: 'Assistant IA & Prompts', desc: 'Génération de copies, déclinaisons créas et RAG' },
-  { id: 'admin_ia', label: 'Administration IA & RAG', desc: 'Paramétrage des bases documentaires et modèles Gemini' },
+  { id: 'admin_ia', label: 'Administration IA & RAG', desc: 'Paramétrage des bases documentaires et du fournisseur Groq' },
   { id: 'users', label: 'Gestion Utilisateurs & Droits', desc: 'Console RH, gestion des comptes, habilitations et audit' }
 ];
 

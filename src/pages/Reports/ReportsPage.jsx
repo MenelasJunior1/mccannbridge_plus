@@ -264,7 +264,7 @@ export default function ReportsPage() {
         <div className="dashboard-analytics-page animate-fade" style={{ paddingBottom: 60 }}>
           
           {/* ─── 1. EN-TÊTE DÉCISIONNEL CLIENT (Style Module Influence) ─── */}
-          <div className="flex justify-between items-center flex-wrap gap-14 mb-20">
+          <div className="bridge-module-head flex justify-between items-center flex-wrap gap-14 mb-20">
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <h1 style={{ fontSize: 24, fontWeight: 900, margin: 0, letterSpacing: '-0.5px', color: 'var(--dark)' }}>
@@ -494,7 +494,7 @@ export default function ReportsPage() {
            ═══════════════════════════════════════════════════════════════════ */
         <div className="agency-view-container animate-fadeIn">
           {/* ─── 1. TOP HEADER (Identique au module Dashboard Analytics) ─── */}
-      <div className="flex justify-between items-start flex-wrap gap-16 mb-20">
+      <div className="bridge-module-head flex justify-between items-start flex-wrap gap-16 mb-20">
         <div>
           <div className="flex items-center gap-10 flex-wrap">
             <h1 style={{ fontSize: 24, fontWeight: 900, margin: 0, letterSpacing: '-0.5px' }}>

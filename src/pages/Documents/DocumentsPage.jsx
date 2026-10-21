@@ -181,9 +181,9 @@ export default function DocumentsPage() {
   };
 
   return (
-    <div className="space-y-6 pb-12 animate-in fade-in">
+    <div className="bridge-module-page space-y-6 pb-12 animate-in fade-in">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+      <div className="bridge-module-head flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <div>
           <div className="flex items-center gap-2.5">
             <span className="text-2xl">📁</span>

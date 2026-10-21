@@ -1,4 +1,8 @@
 import { useState, useMemo } from 'react';
+import {
+  AlertTriangle, BarChart3, BriefcaseBusiness, CircleDollarSign, Columns3,
+  FileCheck2, FlaskConical, List, Plus, Search, X
+} from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { BRIEF_STATUSES, BRIEF_TYPOLOGIES } from '../../data/briefs';
@@ -70,129 +74,112 @@ export default function BriefsPage() {
   };
 
   return (
-    <div className="briefs-page-container">
-      {/* Top Page Header */}
-      <div className="briefs-page-header">
+    <div className="briefs-page-container bridge-briefs-page">
+      <div className="briefs-page-header bridge-editorial-page-head">
         <div className="briefs-header-left">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span className="briefs-header-icon">📋</span>
-            <div>
-              <h1 className="text-2xl font-bold text-dark" style={{ margin: 0 }}>
-                Briefs & Progress
-              </h1>
-              <p className="text-base text-muted" style={{ margin: '2px 0 0 0', fontSize: 13 }}>
-                Plateforme de cadrage, spécifications techniques et suivi d'avancement modulaire
-              </p>
-            </div>
-          </div>
+          <span className="bridge-page-index">01 / BRIEFS</span>
+          <h1>Briefs<br />&amp; progression</h1>
+          <p>Cadrez les demandes, suivez leur exécution et rendez chaque décision visible.</p>
         </div>
 
         <div className="briefs-header-actions">
-          {/* Dual Perspective Toggle */}
           <div className="perspective-toggle-group">
             <button
               type="button"
               className={`toggle-btn ${perspective === 'client' ? 'active client' : ''}`}
               onClick={() => setPerspective('client')}
             >
-              🟠 Vue Client (Orange)
+              Client / Orange
             </button>
             <button
               type="button"
               className={`toggle-btn ${perspective === 'agency' ? 'active agency' : ''}`}
               onClick={() => setPerspective('agency')}
             >
-              🏢 Vue Agence (McCann)
+              Agence / McCann
             </button>
           </div>
 
-          {/* New Brief Button */}
           <button
             type="button"
-            className="btn btn-orange"
+            className="btn btn-orange bridge-primary-action"
             onClick={() => { setEditingBrief(null); setIsCreateOpen(true); }}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', fontSize: 13 }}
           >
-            <span>+</span> Nouveau Brief (5 Sections)
+            <Plus size={17} /> Nouveau brief
           </button>
         </div>
       </div>
 
-      {/* KPI Stats Overview Cards */}
       <div className="briefs-kpi-grid">
         <div className="kpi-card">
-          <div className="kpi-icon-wrap blue">📋</div>
+          <div className="kpi-icon-wrap blue"><FileCheck2 size={19} /></div>
           <div>
             <div className="kpi-value">{stats.total}</div>
-            <div className="kpi-label">Total Briefs Actifs</div>
+            <div className="kpi-label">Briefs actifs</div>
           </div>
         </div>
 
         <div className="kpi-card">
-          <div className="kpi-icon-wrap orange">🟠</div>
+          <div className="kpi-icon-wrap orange"><BriefcaseBusiness size={19} /></div>
           <div>
             <div className="kpi-value">{stats.inProd}</div>
-            <div className="kpi-label">En Production (UX & Dev)</div>
+            <div className="kpi-label">En production</div>
           </div>
         </div>
 
         <div className="kpi-card">
-          <div className="kpi-icon-wrap purple">🧪</div>
+          <div className="kpi-icon-wrap purple"><FlaskConical size={19} /></div>
           <div>
             <div className="kpi-value">{stats.inUat}</div>
-            <div className="kpi-label">En Recette Client (UAT)</div>
+            <div className="kpi-label">En recette client</div>
           </div>
         </div>
 
         <div className="kpi-card">
-          <div className="kpi-icon-wrap red">⚡</div>
+          <div className="kpi-icon-wrap red"><AlertTriangle size={19} /></div>
           <div>
             <div className="kpi-value">{stats.upcomingDeadlines}</div>
-            <div className="kpi-label">Alertes Go-Live (J-30)</div>
+            <div className="kpi-label">Alertes avant lancement</div>
           </div>
         </div>
 
         <div className="kpi-card">
-          <div className="kpi-icon-wrap green">💰</div>
+          <div className="kpi-icon-wrap green"><CircleDollarSign size={19} /></div>
           <div>
             <div className="kpi-value">{formatCurrency(stats.totalBudget)}</div>
-            <div className="kpi-label">Budget Total Engagé</div>
+            <div className="kpi-label">Budget engagé</div>
           </div>
         </div>
       </div>
 
-      {/* Navigation Controls & Filters Bar */}
       <div className="briefs-controls-bar">
-        {/* View Mode Switcher */}
         <div className="view-mode-tabs">
           <button
             type="button"
             className={`view-tab ${viewMode === 'dashboard' ? 'active' : ''}`}
             onClick={() => setViewMode('dashboard')}
           >
-            📊 Progression & Jalons
+            <BarChart3 size={16} /> Progression
           </button>
           <button
             type="button"
             className={`view-tab ${viewMode === 'kanban' ? 'active' : ''}`}
             onClick={() => setViewMode('kanban')}
           >
-            📋 Kanban Cycle de Vie (8 Statuts)
+            <Columns3 size={16} /> Kanban
           </button>
           <button
             type="button"
             className={`view-tab ${viewMode === 'list' ? 'active' : ''}`}
             onClick={() => setViewMode('list')}
           >
-            📑 Liste Détaillée & Spécifications
+            <List size={16} /> Liste détaillée
           </button>
         </div>
 
-        {/* Search and Filters */}
         <div className="filters-group">
-          {/* Search Box */}
           <div className="search-input-box">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Search size={15} /></span>
             <input
               type="text"
               placeholder="Rechercher par mot-clé, réf. ou sponsor..."
@@ -201,11 +188,10 @@ export default function BriefsPage() {
               className="search-input"
             />
             {searchTerm && (
-              <button className="search-clear" onClick={() => setSearchTerm('')}>✕</button>
+              <button className="search-clear" onClick={() => setSearchTerm('')} aria-label="Effacer la recherche"><X size={14} /></button>
             )}
           </div>
 
-          {/* Typology Filter */}
           <select
             className="filter-select"
             value={filterTypology}
@@ -217,7 +203,6 @@ export default function BriefsPage() {
             ))}
           </select>
 
-          {/* Status Filter */}
           <select
             className="filter-select"
             value={filterStatus}
@@ -225,7 +210,7 @@ export default function BriefsPage() {
           >
             <option value="ALL">Tous les statuts</option>
             {Object.values(BRIEF_STATUSES).map(s => (
-              <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
+              <option key={s.id} value={s.id}>{s.label}</option>
             ))}
           </select>
         </div>

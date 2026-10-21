@@ -8,7 +8,7 @@ export const INITIAL_AGENTS = [
     icon: "🎨",
     description: "Concepts disruptifs, accroches publicitaires, scripts vidéo, storyboards et activations terrain innovantes.",
     systemPrompt: "Tu es le Directeur de Création Senior de McCann Bridge pour Orange Cameroun. Ton rôle est de proposer des concepts de campagne percutants, des idées d'activation mémorables, des storyboards engageants et des angles créatifs originaux ancrés dans la culture camerounaise et urbaine africaine.",
-    model: "gemini-3.7-flash",
+    model: "openai/gpt-oss-20b",
     temperature: 0.85,
     tools: ["brainstorming", "scriptwriter", "storyboarder"],
     status: "active",
@@ -22,7 +22,7 @@ export const INITIAL_AGENTS = [
     icon: "💡",
     description: "Analyse de brief, insights consommateurs, cartographie d'audiences, positionnement et territoires de marque.",
     systemPrompt: "Tu es le Planneur Stratégique de McCann Bridge. Tu analyses les briefs, définis des problématiques clés, découvres des insights consommateurs forts au Cameroun (Douala, Yaoundé, régions), et structures des recommandations stratégiques rigoureuses et convaincantes.",
-    model: "gemini-3.7-flash",
+    model: "openai/gpt-oss-20b",
     temperature: 0.6,
     tools: ["market-analysis", "consumer-insights", "brief-deconstruct"],
     status: "active",
@@ -36,7 +36,7 @@ export const INITIAL_AGENTS = [
     icon: "📱",
     description: "Calendriers éditoriaux, captions virales, concepts de Reels/TikTok, stratégie de hashtags et engagement de communauté.",
     systemPrompt: "Tu es l'expert Social Media & Community Management de McCann pour Orange Cameroun (Facebook, Instagram, TikTok, X, LinkedIn). Tu crées des calendriers de publication, rédiges des captions accrocheuses en français avec touches de camfranglais si approprié, proposes des formats tendances et maximises l'engagement.",
-    model: "gemini-3.7-flash",
+    model: "openai/gpt-oss-20b",
     temperature: 0.75,
     tools: ["calendar-generator", "caption-writer", "trend-analyzer"],
     status: "active",
@@ -50,7 +50,7 @@ export const INITIAL_AGENTS = [
     icon: "✍️",
     description: "Slogans percutants, headlines, body copy publicitaire, manifestes de marque et reformulations persuasives.",
     systemPrompt: "Tu es le Concepteur-Rédacteur d'élite de McCann. Tu cisèles chaque mot pour créer des slogans inoubliables, des accroches publicitaires percutantes, des body copies fluides et des manifestes de marque inspirants avec une maîtrise absolue de la rhétorique et du ton.",
-    model: "gemini-3.7-flash",
+    model: "openai/gpt-oss-20b",
     temperature: 0.7,
     tools: ["slogan-maker", "tone-adjuster", "copy-polisher"],
     status: "active",
@@ -64,7 +64,7 @@ export const INITIAL_AGENTS = [
     icon: "🔬",
     description: "Analyse approfondie de documents internes, extraction de données clés, synthèse documentaire et comparaisons RAG.",
     systemPrompt: "Tu es l'Analyste de Recherche et de Connaissances de McCann Bridge. Tu exploites la base de connaissances documentaire de l'agence (Brand Guidelines, Briefs, Rapports, Etudes) pour extraire avec exactitude les informations recherchées, citer les sources et produire des synthèses structurées.",
-    model: "gemini-3.7-flash",
+    model: "openai/gpt-oss-20b",
     temperature: 0.3,
     tools: ["rag-search", "document-summarizer", "data-extractor"],
     status: "active",
@@ -78,7 +78,7 @@ export const INITIAL_AGENTS = [
     icon: "⏱️",
     description: "Comptes-rendus de réunion, matrice de tâches, rétroplannings, suivi d'actions et synthèses de projet.",
     systemPrompt: "Tu es le Chef de Projet Digital Senior de McCann Bridge. Tu structures les plannings de campagne, rédiges des comptes-rendus de réunion actionnables, récapitules les livrables clés et identifies les points de blocage opérationnels avec rigueur.",
-    model: "gemini-3.7-flash",
+    model: "openai/gpt-oss-20b",
     temperature: 0.4,
     tools: ["timeline-builder", "meeting-notes", "task-matrix"],
     status: "active",
@@ -151,7 +151,7 @@ export const INITIAL_PROMPT_TEMPLATES = [
     author: "Steve B. (McCann)",
     visibility: "global",
     tags: ["Campagne", "Slogan", "Copywriting", "Créa"],
-    recommendedModel: "gemini-3.7-flash",
+    recommendedModel: "openai/gpt-oss-20b",
     favorite: true,
     content: `Agis comme un Directeur de Création de renommée mondiale.
 Je prépare une campagne pour la marque {{brand}} autour du projet "{{campaign}}".
@@ -174,7 +174,7 @@ Livrables attendus :
     author: "Sarah K. (Social Lead)",
     visibility: "global",
     tags: ["Planning", "Instagram", "Facebook", "TikTok"],
-    recommendedModel: "gemini-3.7-flash",
+    recommendedModel: "openai/gpt-oss-20b",
     favorite: true,
     content: `Crée un calendrier éditorial pour la marque {{brand}} sur la semaine prochaine.
 Projet / Axe thématique : {{campaign}}
@@ -198,7 +198,7 @@ Pour chaque jour (Lundi au Dimanche), fournis dans un tableau :
     author: "Marc O. (Strat Lead)",
     visibility: "global",
     tags: ["Brief", "Stratégie", "Insights", "Positionnement"],
-    recommendedModel: "gemini-3.7-flash",
+    recommendedModel: "openai/gpt-oss-20b",
     favorite: false,
     content: `Analyse le brief suivant pour la marque {{brand}} dans le cadre du projet "{{campaign}}".
 Objectif business et communication : {{objective}}
@@ -220,7 +220,7 @@ Fournis une analyse stratégique en 5 étapes :
     author: "Marie D. (Copywriter)",
     visibility: "global",
     tags: ["Vidéo", "Script", "Spot TV", "Digital"],
-    recommendedModel: "gemini-3.7-flash",
+    recommendedModel: "openai/gpt-oss-20b",
     favorite: true,
     content: `Rédige un script publicitaire pour {{brand}} pour la campagne "{{campaign}}".
 Objectif : {{objective}}
@@ -242,7 +242,7 @@ Format : Tableau scénarisé minute par minute (0-5s, 5-15s, 15-25s, 25-30s) ave
     author: "Kevin N. (Account Manager)",
     visibility: "team",
     tags: ["Synthèse", "RAG", "Knowledge", "Audit"],
-    recommendedModel: "gemini-3.7-flash",
+    recommendedModel: "openai/gpt-oss-20b",
     favorite: false,
     content: `À partir des documents attachés en contexte pour {{brand}} et le projet {{campaign}} :
 1. Résume en 5 points clés les directives obligatoires de la marque.
@@ -259,7 +259,7 @@ Format : Tableau scénarisé minute par minute (0-5s, 5-15s, 15-25s, 25-30s) ave
     author: "Alain T. (Directeur de Clientèle)",
     visibility: "global",
     tags: ["Compte-Rendu", "Management", "Actions", "Client"],
-    recommendedModel: "gemini-3.7-flash",
+    recommendedModel: "openai/gpt-oss-20b",
     favorite: false,
     content: `Génère un compte-rendu de réunion officiel McCann Bridge pour le client {{brand}} sur le projet {{campaign}}.
 Objectif de la réunion : {{objective}}

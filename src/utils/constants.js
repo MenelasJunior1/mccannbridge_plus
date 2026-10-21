@@ -31,6 +31,7 @@ export const AGENCE_SECTIONS = [
   { id: 'admin-ia', label: 'Admin IA & RAG', icon: '⚙️', path: '/admin-ia' },
   { id: 'tasks', label: 'Tâches transverses', icon: '✓', path: '/tasks' },
   { id: 'users', label: 'Utilisateurs & Droits', icon: '👥', path: '/users' },
+  { id: 'monitoring', label: 'Audit & Monitoring', icon: '◉', path: '/monitoring' },
 ];
 
 export const CLIENT_SECTIONS = [

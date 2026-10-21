@@ -66,9 +66,9 @@ export default function AdminIAPage() {
   };
 
   return (
-    <div className="space-y-6 pb-12 animate-in fade-in">
+    <div className="bridge-module-page space-y-6 pb-12 animate-in fade-in">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+      <div className="bridge-module-head flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <div>
           <div className="flex items-center gap-2.5">
             <span className="text-2xl">⚙️</span>
@@ -77,7 +77,7 @@ export default function AdminIAPage() {
             </h1>
           </div>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Gouvernance des modèles Gemini, personnalisation des prompts systèmes des agents, indexation documentaire et traçabilité des opérations.
+            Gouvernance du fournisseur Groq, personnalisation des agents, indexation documentaire et traçabilité des opérations orchestrées par Phoenix.
           </p>
         </div>
 
@@ -132,7 +132,7 @@ export default function AdminIAPage() {
                   icon: '🤖',
                   description: '',
                   systemPrompt: '',
-                  model: 'gemini-3.7-flash',
+                  model: 'openai/gpt-oss-20b',
                   temperature: 0.7,
                   tools: ['general-ai'],
                   status: 'active',
@@ -221,7 +221,7 @@ export default function AdminIAPage() {
                 Base Vectorielle & Fragments Documentaires (RAG)
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                {knowledgeChunks.length} sections documentaires indexées prêtes pour l'extraction automatique et l'attribution de sources par Gemini.
+                {knowledgeChunks.length} sections documentaires indexées. Phoenix contrôle leur sélection, leur autorisation et les citations transmises à Groq.
               </p>
             </div>
             <button
@@ -391,14 +391,13 @@ export default function AdminIAPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Modèle Gemini :</label>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Modèle Groq :</label>
                   <select
                     value={editingAgent.model}
                     onChange={(e) => setEditingAgent({ ...editingAgent, model: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
                   >
-                    <option value="gemini-3.7-flash">Gemini 3.7 Flash (Recommandé)</option>
-                    <option value="gemini-2.5-pro">Gemini 2.5 Pro (Raisonnement)</option>
+                    <option value="openai/gpt-oss-20b">OpenAI GPT OSS 20B</option>
                   </select>
                 </div>
                 <div>

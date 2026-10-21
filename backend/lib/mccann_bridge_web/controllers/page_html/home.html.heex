@@ -1,0 +1,46 @@
+<Layouts.flash_group flash={@flash} />
+<main class="bridge-landing">
+  <header class="landing-header">
+    <a href={~p"/"} class="bridge-wordmark">
+      <span class="bridge-wordmark-mark">M</span>
+      <span><strong>McCann Bridge</strong><small>Intelligence workspace</small></span>
+    </a>
+    <nav class="landing-actions" aria-label="Compte">
+      <.link navigate={~p"/users/register"}>Créer un compte</.link>
+      <.link navigate={~p"/users/log-in"} class="is-primary">Se connecter</.link>
+    </nav>
+  </header>
+
+  <section class="landing-hero">
+    <div class="landing-hero-copy">
+      <p class="eyebrow">Communication augmentée</p>
+      <h1>Un seul espace pour piloter, comprendre et décider.</h1>
+      <p>
+        McCann Bridge réunit vos documents, vos campagnes, vos rapports et un assistant IA
+        fondé sur les sources que votre équipe a réellement validées.
+      </p>
+      <div class="landing-cta">
+        <.link navigate={~p"/users/log-in"}>Accéder au workspace</.link>
+        <a href="#capabilities">Découvrir la plateforme</a>
+      </div>
+    </div>
+
+    <div class="landing-visual" id="capabilities" aria-label="Fonctionnalités principales">
+      <article>
+        <small>Base documentaire</small>
+        <strong>Sources gouvernées</strong>
+        <span>Chaque version est contrôlée avant d’alimenter le moteur RAG.</span>
+      </article>
+      <article>
+        <small>Assistant IA</small>
+        <strong>Réponses traçables</strong>
+        <span>Les réponses fondées conservent leurs citations et leur provenance.</span>
+      </article>
+      <article>
+        <small>Reporting</small>
+        <strong>Rapports maîtrisés</strong>
+        <span>Les synthèses suivent un cycle de génération, revue et publication.</span>
+      </article>
+    </div>
+  </section>
+</main>

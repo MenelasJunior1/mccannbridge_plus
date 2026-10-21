@@ -1141,6 +1141,7 @@ export default function FinancePage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: '100%' }}>
       {/* ─── EN-TÊTE SUPÉRIEUR GLOBAL : SÉLECTEUR DE VUE DUAL CLIENT / AGENCE ─── */}
       <header
+        className="bridge-module-switcher"
         style={{
           display: 'flex',
           justifyContent: 'space-between',

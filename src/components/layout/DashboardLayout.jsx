@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import AppHeader from './AppHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
 import { AGENCE_SECTIONS, CLIENT_SECTIONS } from '../../utils/constants';
 
 export default function DashboardLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('bridge_sidebar_collapsed') === 'true');
   const location = useLocation();
-  const { user, isAgency, isClient } = useAuth();
+  const { isAgency, isClient, user } = useAuth();
   const { notifications } = useApp();
 
   const isClientRole = isClient || user?.role === 'client' || !isAgency;
@@ -28,6 +30,39 @@ export default function DashboardLayout() {
     setMobileOpen(false);
   }, [location.pathname]);
 
+  // Legacy modules still contain decorative emoji in data labels. Keep the
+  // authenticated workspace typographically neutral while those modules are
+  // progressively moved to the shared SVG icon system.
+  useEffect(() => {
+    const root = document.getElementById('mainContent');
+    if (!root) return undefined;
+    const emojiPattern = /(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|\uFE0F|\u200D|\u20E3)/gu;
+    const cleanTextNodes = (target) => {
+      if (!target) return;
+      const walker = document.createTreeWalker(target, NodeFilter.SHOW_TEXT);
+      let node = walker.nextNode();
+      while (node) {
+        const cleaned = node.nodeValue.replace(emojiPattern, '').replace(/\s{2,}/g, ' ');
+        if (cleaned !== node.nodeValue) node.nodeValue = cleaned;
+        node = walker.nextNode();
+      }
+    };
+    cleanTextNodes(root);
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'characterData') cleanTextNodes(mutation.target.parentNode);
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const cleaned = node.nodeValue.replace(emojiPattern, '').replace(/\s{2,}/g, ' ');
+            if (cleaned !== node.nodeValue) node.nodeValue = cleaned;
+          } else if (node.nodeType === Node.ELEMENT_NODE) cleanTextNodes(node);
+        });
+      });
+    });
+    observer.observe(root, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
+  }, [location.pathname]);
+
   // Handle ESC key to close mobile drawer
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -39,42 +74,15 @@ export default function DashboardLayout() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [mobileOpen]);
 
+  const toggleSidebar = () => {
+    setSidebarCollapsed((collapsed) => {
+      localStorage.setItem('bridge_sidebar_collapsed', String(!collapsed));
+      return !collapsed;
+    });
+  };
+
   return (
-    <div className={`app-layout ${mobileOpen ? 'drawer-active' : ''}`}>
-      {/* Mobile & Tablet Top Header (< 1024px) */}
-      <header className="mobile-header" role="banner" aria-label="En-tête de navigation mobile">
-        <button 
-          className="mobile-hamburger-btn"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label={mobileOpen ? "Fermer le menu de navigation" : "Ouvrir le menu de navigation"}
-          aria-expanded={mobileOpen}
-          aria-controls="appSidebar"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </button>
-
-        <div className="mobile-header-title">
-          <span className="mobile-logo-accent">BRIDGE</span>
-          {currentSection && (
-            <span className="mobile-current-page">
-              <span className="mobile-page-separator">/</span>
-              {currentSection.label}
-            </span>
-          )}
-        </div>
-
-        <div className="mobile-header-right">
-          <div className="mobile-avatar" style={{ background: 'var(--orange)' }} title={user?.user || 'Utilisateur'}>
-            {user?.user?.split(' ').map(w => w[0]).join('').slice(0, 2) || 'BR'}
-          </div>
-        </div>
-      </header>
-
-      {/* Backdrop for mobile & tablet drawer */}
+    <div className={`app-layout bridge-app-shell ${mobileOpen ? 'drawer-active' : ''} ${sidebarCollapsed ? 'sidebar-is-collapsed' : ''}`}>
       <div 
         className={`mobile-backdrop ${mobileOpen ? 'open' : ''}`}
         onClick={() => setMobileOpen(false)} 
@@ -82,10 +90,20 @@ export default function DashboardLayout() {
       />
 
       {/* Sidebar with overlay drawer support on < 1024px */}
-      <Sidebar isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <Sidebar
+        isOpen={mobileOpen}
+        collapsed={sidebarCollapsed}
+        onToggle={toggleSidebar}
+        onClose={() => setMobileOpen(false)}
+      />
 
       <main className="main-content" id="mainContent" role="main">
-        <div className="content-area animate-fade">
+        <AppHeader
+          currentSection={currentSection}
+          notifications={notifications}
+          onOpenMenu={() => setMobileOpen(true)}
+        />
+        <div className="content-area bridge-route-stage" key={location.pathname}>
           <Outlet />
         </div>
       </main>

@@ -1,4 +1,9 @@
 import React, { useState } from 'react';
+import {
+  AlertTriangle, CheckCircle2, ChevronDown, CircleGauge, Clock3,
+  FileBarChart, Filter, GitBranch, LayoutDashboard, Plus, Search,
+  UsersRound, X
+} from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { TEAM, POLES } from '../../data/team';
@@ -6,8 +11,6 @@ import { TRAFFIC_STATUSES } from '../../data/tickets';
 import { getFridayCountdown } from '../../utils/helpers';
 
 // Components & Sections (Vue Agence Interne)
-import BridgeSwitchboardRibbon from './components/BridgeSwitchboardRibbon';
-import RolePerspectiveBanner from './components/RolePerspectiveBanner';
 import TrafficKanbanView from './sections/TrafficKanbanView';
 import TrafficChronosTimeline from './sections/TrafficChronosTimeline';
 import TrafficCompetencesAndLoad from './sections/TrafficCompetencesAndLoad';
@@ -20,8 +23,6 @@ import NewTicketModal from './modals/NewTicketModal';
 import WeeklyTrafficReportModal from './modals/WeeklyTrafficReportModal';
 
 // NOUVEAUX COMPOSANTS DÉDIÉS : VUE CLIENT (Conformes au Cahier des Charges & Design Influence)
-import ClientTrafficSwitchboardRibbon from './client/ClientTrafficSwitchboardRibbon';
-import ClientTrafficPerspectiveBanner from './client/ClientTrafficPerspectiveBanner';
 import ClientTrafficContextBar from './client/ClientTrafficContextBar';
 import ClientTrafficCockpit from './client/ClientTrafficCockpit';
 import ClientTrafficPortfolio from './client/ClientTrafficPortfolio';
@@ -127,13 +128,12 @@ export default function TrafficIAPage() {
   const { isClient: authIsClient } = useAuth ? useAuth() : { isClient: false };
 
   // Mode d'affichage actif : par défaut 'client' pour respecter fidèlement la demande du cahier des charges
-  const [activeViewMode, setActiveViewMode] = useState(authIsClient ? 'client' : 'client'); // 'client' | 'agency'
+  const [activeViewMode, setActiveViewMode] = useState(authIsClient ? 'client' : 'agency'); // 'client' | 'agency'
 
   // ─────────────────────────────────────────────────────────────
   // ÉTATS DE LA VUE CLIENT (Cahier des charges Septembre 2026)
   // ─────────────────────────────────────────────────────────────
   const [clientTab, setClientTab] = useState('cockpit'); // 'cockpit' | 'travaux' | 'calendrier' | 'recommandations' | 'validations' | 'livrables' | 'gouvernance'
-  const [clientRole, setClientRole] = useState('valideur_orange'); // 'valideur_orange' | 'contributeur_orange' | 'lecteur_orange' | 'traffic_mccann'
   const [selectedPeriod, setSelectedPeriod] = useState('s38_2026');
   const [selectedEntity, setSelectedEntity] = useState('all');
   const [selectedUniverse, setSelectedUniverse] = useState('all');
@@ -312,180 +312,39 @@ export default function TrafficIAPage() {
   };
 
   return (
-    <div className="traffic-manager-page animate-fade" style={{ paddingBottom: 60 }}>
-      {/* ─── TOP BAR AVEC SÉLECTEUR DE VUE (CLIENT vs AGENCE) ─── */}
-      <div className="flex justify-between items-center flex-wrap gap-14 mb-20">
+    <div className="traffic-manager-page bridge-traffic-page animate-fade">
+      <header className="bridge-editorial-page-head bridge-traffic-head">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <h1 style={{ fontSize: 24, fontWeight: 900, margin: 0, letterSpacing: '-0.5px' }}>
-              TRAFFIC MANAGER
-            </h1>
-            <span className="tag tag-orange" style={{ fontSize: 11, fontWeight: 800 }}>
-              MCCANN DOUALA ⇄ ORANGE CAMEROUN
-            </span>
-            {activeViewMode === 'client' && (
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  padding: '2px 8px',
-                  borderRadius: 12,
-                  background: '#E8F5E9',
-                  color: '#2E7D32',
-                  border: '1px solid #C8E6C9',
-                }}
-              >
-                Vue Client Conforme Cahier des Charges
-              </span>
-            )}
-          </div>
-          <p style={{ margin: '4px 0 0 0', color: 'var(--muted)', fontSize: 13 }}>
-            Plateforme de coordination, régulation des flux et prise de décision paritaire.
-          </p>
+          <span className="bridge-page-index">02 / TRAFFIC</span>
+          <h1>Traffic<br />manager</h1>
+          <p>Coordonnez la charge, les délais et les arbitrages depuis une seule ligne de commande.</p>
         </div>
-
-        {/* Boutons d'action supérieurs & Switcher de Vue */}
-        <div className="flex items-center gap-12 flex-wrap">
-          {/* Switcher Segmenté de Vue */}
-          <div
-            style={{
-              display: 'flex',
-              background: '#F3F4F6',
-              padding: 3,
-              borderRadius: 8,
-              border: '1px solid #E5E7EB',
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setActiveViewMode('client')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '6px 12px',
-                borderRadius: 6,
-                fontSize: 12,
-                fontWeight: 800,
-                border: 'none',
-                background: activeViewMode === 'client' ? '#FF7900' : 'transparent',
-                color: activeViewMode === 'client' ? '#FFFFFF' : '#4B5563',
-                cursor: 'pointer',
-                boxShadow: activeViewMode === 'client' ? '0 1px 3px rgba(0,0,0,0.15)' : 'none',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <span>👁️ Vue Client (Cahier des Charges)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveViewMode('agency')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '6px 12px',
-                borderRadius: 6,
-                fontSize: 12,
-                fontWeight: 800,
-                border: 'none',
-                background: activeViewMode === 'agency' ? '#1E293B' : 'transparent',
-                color: activeViewMode === 'agency' ? '#FFFFFF' : '#4B5563',
-                cursor: 'pointer',
-                boxShadow: activeViewMode === 'agency' ? '0 1px 3px rgba(0,0,0,0.15)' : 'none',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <span>🏢 Vue Agence (Interne)</span>
-            </button>
+        <div className="bridge-traffic-head-actions">
+          <div className="bridge-view-switcher" aria-label="Perspective d’affichage">
+            <button type="button" className={activeViewMode === 'client' ? 'active' : ''} onClick={() => setActiveViewMode('client')}>Client</button>
+            <button type="button" className={activeViewMode === 'agency' ? 'active' : ''} onClick={() => setActiveViewMode('agency')}>Agence</button>
           </div>
-
-          {/* Friday 17h milestone countdown */}
-          <div
-            className="card"
-            style={{
-              padding: '6px 14px',
-              background: '#FFF8F2',
-              border: '1px solid #FFE0B2',
-              borderRadius: 8,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-            }}
-          >
-            <span style={{ fontSize: 16 }}>🏁</span>
-            <div>
-              <div style={{ fontSize: 10, color: '#E65100', fontWeight: 700 }}>CLÔTURE VENDREDI 17H</div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--dark)' }}>
-                {fridayCount.days}j {fridayCount.hours}h {fridayCount.minutes}m restants
-              </div>
-            </div>
+          <div className="bridge-deadline">
+            <Clock3 size={17} />
+            <span><small>Clôture vendredi, 17 h</small><strong>{fridayCount.days}j {fridayCount.hours}h {fridayCount.minutes}m</strong></span>
           </div>
-
           {activeViewMode === 'client' ? (
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={() => setIsClientNewBriefOpen(true)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                background: '#FF7900',
-                borderColor: '#FF7900',
-                fontWeight: 800,
-              }}
-            >
-              <span>+</span> Nouveau Brief Structuré
-            </button>
+            <button className="bridge-primary-action" onClick={() => setIsClientNewBriefOpen(true)}><Plus size={17} /> Nouveau brief</button>
           ) : (
-            <>
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => setIsWeeklyReportOpen(true)}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid #D0D0D0' }}
-              >
-                <span>📊</span> Rapport Hebdomadaire
-              </button>
-
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={() => setIsNewTicketOpen(true)}
-                style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-              >
-                <span>+</span> Nouveau Ticket
-              </button>
-            </>
+            <div className="bridge-head-button-row">
+              <button className="bridge-secondary-action" onClick={() => setIsWeeklyReportOpen(true)}><FileBarChart size={16} /> Rapport</button>
+              <button className="bridge-primary-action" onClick={() => setIsNewTicketOpen(true)}><Plus size={17} /> Nouveau ticket</button>
+            </div>
           )}
         </div>
-      </div>
+      </header>
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* 🅰️ RENDU PRINCIPAL : VUE CLIENT (CAHIER DES CHARGES SEPT. 2026)    */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {activeViewMode === 'client' && (
         <div className="client-traffic-view-container space-y-20 animate-fade">
-          {/* 1. The Bridge Switchboard Ribbon (Nocturnal Design & 6 Nodes) */}
-          <ClientTrafficSwitchboardRibbon
-            dossiers={clientDossiers}
-            validations={clientValidations}
-            recommendations={clientRecommendations}
-            activeTab={clientTab}
-            onSelectTab={setClientTab}
-            selectedEntity={selectedEntity}
-            lastSyncTime={lastSyncTime}
-          />
-
-          {/* 2. Perspective Banner (4 Rôles et Droits Client) */}
-          <ClientTrafficPerspectiveBanner
-            currentRole={clientRole}
-            onChangeRole={setClientRole}
-            onOpenNewBrief={() => setIsClientNewBriefOpen(true)}
-            onOpenValidations={() => setClientTab('validations')}
-            pendingValidationsCount={clientValidations.filter(v => v.status === 'en_attente').length}
-          />
-
-          {/* 3. Bandeau de Contexte & Filtres Métier (Période, Entité, Univers, Accès rapides) */}
+          {/* Contexte & filtres métier */}
           <ClientTrafficContextBar
             selectedPeriod={selectedPeriod}
             onChangePeriod={setSelectedPeriod}
@@ -501,7 +360,7 @@ export default function TrafficIAPage() {
             dossiersCount={clientDossiers.length}
           />
 
-          {/* 4. Barre de Navigation Principale des 7 Onglets Client */}
+          {/* Navigation principale des 7 sections client */}
           <div
             className="card mb-20 p-8"
             style={{
@@ -517,13 +376,13 @@ export default function TrafficIAPage() {
               aria-label="Navigation Vue Client Traffic"
             >
               {[
-                { id: 'cockpit', label: '🧭 1. Mon Cockpit', badge: null },
-                { id: 'travaux', label: '📂 2. Travaux en cours', badge: clientDossiers.length },
-                { id: 'calendrier', label: '📅 3. Calendrier partagé', badge: clientCalendarItems.length },
-                { id: 'recommandations', label: '💡 4. Recommandations', badge: clientRecommendations.length },
-                { id: 'validations', label: '⚡ 5. Mes validations', badge: clientValidations.filter(v => v.status === 'en_attente').length, isAlert: true },
-                { id: 'livrables', label: '📁 6. Livrables & bilans', badge: clientLivrables.length },
-                { id: 'gouvernance', label: '🛡️ 7. Historique & gouvernance', badge: null },
+                { id: 'cockpit', label: '01. Mon cockpit', badge: null },
+                { id: 'travaux', label: '02. Travaux en cours', badge: clientDossiers.length },
+                { id: 'calendrier', label: '03. Calendrier partagé', badge: clientCalendarItems.length },
+                { id: 'recommandations', label: '04. Recommandations', badge: clientRecommendations.length },
+                { id: 'validations', label: '05. Mes validations', badge: clientValidations.filter(v => v.status === 'en_attente').length, isAlert: true },
+                { id: 'livrables', label: '06. Livrables et bilans', badge: clientLivrables.length },
+                { id: 'gouvernance', label: '07. Historique et gouvernance', badge: null },
               ].map(tab => {
                 const isActive = clientTab === tab.id;
                 return (
@@ -677,123 +536,103 @@ export default function TrafficIAPage() {
       {/* 🅱️ RENDU VUE AGENCE (INTERNE MCCANN)                                */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {activeViewMode === 'agency' && (
-        <div className="agency-traffic-view-container space-y-20 animate-fade">
-          {/* The Visual Bridge Switchboard Ribbon (Vue Agence) */}
-          <BridgeSwitchboardRibbon
-            tickets={tickets}
-            activeFilterStatus={selectedStatusFilter}
-            onSelectStatus={setSelectedStatusFilter}
-          />
+        <div className="agency-traffic-view-container bridge-agency-traffic animate-fade">
+          <section className="bridge-traffic-stats" aria-label="Indicateurs Traffic">
+            <article><span>Tickets actifs</span><strong>{tickets.filter((ticket) => ticket.status !== 'delivered').length}</strong><small>Flux en cours</small></article>
+            <article><span>Priorités</span><strong>{tickets.filter((ticket) => ticket.priority === 'p0_urgent').length}</strong><small>Intervention immédiate</small></article>
+            <article><span>Blocages</span><strong>{tickets.filter((ticket) => ticket.blockage?.isBlocked).length}</strong><small>Arbitrages requis</small></article>
+            <article><span>Revue client</span><strong>{tickets.filter((ticket) => ticket.status === 'client_review').length}</strong><small>Décisions attendues</small></article>
+          </section>
 
-          {/* Role & Permissions Banner */}
-          <RolePerspectiveBanner
-            currentRole={currentAgencyRole}
-            onChangeRole={setCurrentAgencyRole}
-            selectedExecutantId={selectedExecutantId}
-            onChangeExecutant={setSelectedExecutantId}
-            onOpenNewTicket={() => setIsNewTicketOpen(true)}
-          />
-
-          {/* Main Tabs & Responsive Filter Switchboard */}
-          <div className="card mb-20 p-12" style={{ borderRadius: 12 }}>
-            <div className="flex justify-between items-center flex-wrap gap-12">
-              <div
-                className="flex gap-6 overflow-x-auto pb-4 md:pb-0"
-                style={{ WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}
-                role="tablist"
-                aria-label="Modes d'affichage Traffic"
-              >
+          <div className="bridge-traffic-toolbar">
+            <div className="bridge-traffic-tabs" role="tablist" aria-label="Modes d'affichage Traffic">
                 {[
-                  { id: 'kanban', label: '🚦 Vue Switchboard', icon: '🚦' },
-                  { id: 'chronos', label: '⏳ Vue Chronos', icon: '⏳' },
-                  { id: 'load', label: '📊 Compétences & Charge', icon: '📊' },
-                  { id: 'dependencies', label: '🔗 Dépendances', icon: '🔗' },
-                  { id: 'alerts', label: `⚡ Alertes (${alertCount})`, icon: '⚡' },
-                ].map(tab => (
+                  { id: 'kanban', label: 'Switchboard', icon: LayoutDashboard },
+                  { id: 'chronos', label: 'Chronologie', icon: Clock3 },
+                  { id: 'load', label: 'Charge équipe', icon: UsersRound },
+                  { id: 'dependencies', label: 'Dépendances', icon: GitBranch },
+                  { id: 'alerts', label: `Alertes ${alertCount}`, icon: AlertTriangle },
+                ].map(tab => {
+                  const TabIcon = tab.icon;
+                  return (
                   <button
                     key={tab.id}
                     role="tab"
                     aria-selected={agencyActiveTab === tab.id}
                     onClick={() => setAgencyActiveTab(tab.id)}
-                    className="btn btn-sm"
-                    style={{
-                      background: agencyActiveTab === tab.id ? '#1E293B' : 'transparent',
-                      color: agencyActiveTab === tab.id ? '#FFFFFF' : 'var(--dark)',
-                      fontWeight: 700,
-                      borderRadius: 6,
-                      border: agencyActiveTab === tab.id ? 'none' : '1px solid #E5E7EB',
-                      whiteSpace: 'nowrap',
-                      minHeight: 38,
-                      padding: '6px 12px',
-                      transition: 'all 0.15s ease',
-                    }}
+                    className={agencyActiveTab === tab.id ? 'active' : ''}
                   >
-                    {tab.label}
+                    <TabIcon size={16} /> {tab.label}
                   </button>
-                ))}
-              </div>
+                );})}
+            </div>
 
-              <div className="filter-accordion-toggle-wrap">
+              <div className="bridge-traffic-tools">
+                <label className="bridge-role-select">
+                  <span className="sr-only">Perspective métier</span>
+                  <CircleGauge size={15} />
+                  <select value={currentAgencyRole} onChange={(event) => setCurrentAgencyRole(event.target.value)}>
+                    <option value="traffic_manager">Traffic manager</option>
+                    <option value="demandeur">Demandeur</option>
+                    <option value="observateur">Observateur</option>
+                    <option value="executant">Exécutant</option>
+                    <option value="finance">Finance</option>
+                  </select>
+                </label>
                 <button
                   type="button"
-                  className="btn btn-ghost btn-sm filter-mobile-toggle"
+                  className={`bridge-filter-trigger ${isFilterAccordionOpen ? 'active' : ''}`}
                   onClick={() => setIsFilterAccordionOpen(!isFilterAccordionOpen)}
                   aria-expanded={isFilterAccordionOpen}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, minHeight: 38 }}
                 >
-                  <span>🔍 Filtres & Recherche</span>
+                  <Filter size={15} /> Filtres
                   {activeFiltersCount > 0 && (
-                    <span className="badge-count" style={{ background: '#FF7900', color: '#fff', padding: '1px 6px', borderRadius: 10, fontSize: 10, fontWeight: 700 }}>
-                      {activeFiltersCount}
-                    </span>
+                    <span>{activeFiltersCount}</span>
                   )}
-                  <span>{isFilterAccordionOpen ? '▲' : '▼'}</span>
+                  <ChevronDown size={14} />
                 </button>
               </div>
-            </div>
 
             <div
               id="trafficFiltersContent"
               className={`traffic-filters-collapsible ${isFilterAccordionOpen ? 'is-expanded' : ''}`}
             >
-              <div className="flex items-center gap-10 flex-wrap pt-10 mt-10" style={{ borderTop: '1px solid #F0F0F0' }}>
-                <div style={{ flex: '1 1 180px', minWidth: 160 }}>
+              <div className="bridge-traffic-filter-grid">
+                <div>
                   <label htmlFor="trafficPoleFilter" className="sr-only">Pôle</label>
                   <select
                     id="trafficPoleFilter"
                     className="form-control w-full"
                     value={selectedPoleFilter}
                     onChange={e => setSelectedPoleFilter(e.target.value)}
-                    style={{ fontSize: 13, padding: '8px 12px', borderRadius: 8, height: 42 }}
                   >
-                    <option value="all">🏢 Tous les Pôles</option>
+                    <option value="all">Tous les pôles</option>
                     {POLES.map(p => (
-                      <option key={p.id} value={p.id}>{p.icon} {p.label}</option>
+                      <option key={p.id} value={p.id}>{p.label}</option>
                     ))}
                   </select>
                 </div>
 
-                <div style={{ flex: '2 1 240px', minWidth: 200 }}>
+                <div className="bridge-traffic-search">
                   <label htmlFor="trafficSearchQuery" className="sr-only">Rechercher</label>
+                  <Search size={15} />
                   <input
                     id="trafficSearchQuery"
                     type="search"
                     className="form-control w-full"
-                    placeholder="🔍 Rechercher par titre, ID ou marque..."
+                    placeholder="Titre, identifiant ou marque…"
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    style={{ fontSize: 13, padding: '8px 12px', borderRadius: 8, height: 42 }}
                   />
                 </div>
 
                 {activeFiltersCount > 0 && (
                   <button
                     type="button"
-                    className="btn btn-ghost btn-sm"
+                    className="bridge-reset-filters"
                     onClick={() => { setSelectedPoleFilter('all'); setSearchQuery(''); setSelectedStatusFilter('all'); }}
-                    style={{ height: 42, padding: '0 14px', fontSize: 12 }}
                   >
-                    ✕ Réinitialiser
+                    <X size={14} /> Réinitialiser
                   </button>
                 )}
               </div>
@@ -883,17 +722,17 @@ export default function TrafficIAPage() {
       {/* Toast Feedback */}
       {toastMessage && (
         <div
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl text-white text-sm font-bold animate-fade"
-          style={{ background: '#111827', border: '1px solid #374151' }}
+          className="bridge-toast animate-fade"
         >
-          <span>✨</span>
+          <CheckCircle2 size={17} />
           <span>{toastMessage}</span>
           <button
             type="button"
             onClick={() => setToastMessage(null)}
-            className="ml-2 text-gray-400 hover:text-white"
+            className="bridge-toast-close"
+            aria-label="Fermer"
           >
-            ✕
+            <X size={15} />
           </button>
         </div>
       )}

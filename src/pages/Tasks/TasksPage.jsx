@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Pencil, Plus } from 'lucide-react';
 
 export default function TasksPage() {
   const mockTasks = [
@@ -7,13 +7,17 @@ export default function TasksPage() {
   ];
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-24" style={{ borderBottom: '2px solid #eee', paddingBottom: 12 }}>
-        <h1 className="text-2xl font-bold text-dark">✓ Tâches transverses & Automations</h1>
-        <button className="btn btn-primary">Nouvelle Tâche</button>
-      </div>
+    <div className="bridge-simple-page bridge-tasks-page">
+      <header className="bridge-editorial-page-head bridge-simple-head">
+        <div>
+          <span className="bridge-page-index">11 / OPÉRATIONS</span>
+          <h1>Tâches<br />transverses</h1>
+          <p>Centralisez les actions partagées, les automatisations et les échéances des équipes.</p>
+        </div>
+        <button className="bridge-primary-action"><Plus size={17} /> Nouvelle tâche</button>
+      </header>
 
-      <div className="card">
+      <div className="bridge-data-table">
         <table className="table">
           <thead>
             <tr>
@@ -38,7 +42,7 @@ export default function TasksPage() {
                 </td>
                 <td className={task.status !== 'Terminé' ? 'text-red' : 'text-muted'}>{task.deadline}</td>
                 <td>
-                  <button className="btn btn-sm btn-ghost">Éditer</button>
+                  <button className="btn btn-sm btn-ghost"><Pencil size={13} /> Éditer</button>
                 </td>
               </tr>
             ))}

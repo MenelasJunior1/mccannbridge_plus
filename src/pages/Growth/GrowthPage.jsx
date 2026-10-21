@@ -118,7 +118,7 @@ export default function GrowthPage() {
             gap: 10,
             borderLeft: '4px solid #FF7900'
           }}
-          className="animate-fade"
+          className="bridge-toast animate-fade"
         >
           <span>🚀</span>
           <span>{toastMessage}</span>
@@ -127,7 +127,7 @@ export default function GrowthPage() {
 
       {/* ─── EN-TÊTE PRINCIPAL (Style Influence) ─── */}
       <div 
-        className="card mb-20"
+        className="card mb-20 bridge-module-head bridge-growth-head"
         style={{
           background: '#FFFFFF',
           borderRadius: 12,

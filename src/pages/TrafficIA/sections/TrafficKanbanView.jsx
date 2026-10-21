@@ -1,4 +1,5 @@
 import React from 'react';
+import { Activity, AlertTriangle, Building2, CalendarDays, Clock3, Plus } from 'lucide-react';
 import { TRAFFIC_STATUSES, PRIORITY_LEVELS } from '../../../data/tickets';
 import { TEAM, POLES } from '../../../data/team';
 import { calcScore, getScoreColor, getSlaCountdown } from '../../../utils/helpers';
@@ -95,7 +96,7 @@ export default function TrafficKanbanView({
             {/* Column Header */}
             <div className="flex justify-between items-center mb-12">
               <div className="flex items-center gap-6">
-                <span style={{ fontSize: 16 }}>{statusCol.icon}</span>
+                <span className="bridge-column-index">{String(TRAFFIC_STATUSES.findIndex((status) => status.id === statusCol.id) + 1).padStart(2, '0')}</span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--dark)' }}>
                     {statusCol.label}
@@ -122,12 +123,12 @@ export default function TrafficKanbanView({
             {/* Special column hint */}
             {statusCol.id === 'backlog' && (
               <div style={{ fontSize: 11, background: '#FFF3E0', color: '#E65100', padding: '6px 8px', borderRadius: 6, marginBottom: 8, fontWeight: 600 }}>
-                ⏱️ SLA de qualification : <strong>&lt; 4 heures</strong>
+                <Clock3 size={13} /> SLA de qualification : <strong>&lt; 4 heures</strong>
               </div>
             )}
             {statusCol.id === 'client_review' && (
               <div style={{ fontSize: 11, background: '#E3F2FD', color: '#0D47A1', padding: '6px 8px', borderRadius: 6, marginBottom: 8, fontWeight: 600 }}>
-                ⏳ SLA de retour client : <strong>48 heures</strong>
+                <Clock3 size={13} /> SLA de retour client : <strong>48 heures</strong>
               </div>
             )}
 
@@ -187,7 +188,7 @@ export default function TrafficKanbanView({
                               color: priority.color 
                             }}
                           >
-                            {priority.icon} {priority.label.split(' ')[0]}
+                            {priority.label.replace(/^[^\p{L}\p{N}]+/u, '').split(' ')[0]}
                           </span>
                           <span style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 700 }}>
                             {ticket.id}
@@ -205,7 +206,7 @@ export default function TrafficKanbanView({
                             color: '#2C3E50' 
                           }}
                         >
-                          {pole.icon} {pole.label}
+                          {pole.label}
                         </span>
                       </div>
 
@@ -216,28 +217,28 @@ export default function TrafficKanbanView({
 
                       {/* Brand & Deadline */}
                       <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 8, display: 'flex', justifyContent: 'space-between' }}>
-                        <span>🏢 {ticket.brand || 'Orange Cameroun'}</span>
+                        <span className="bridge-ticket-meta"><Building2 size={12} /> {ticket.brand || 'Orange Cameroun'}</span>
                         <span style={{ fontWeight: 600, color: ticket.daysLeft <= 1 ? '#E74C3C' : 'var(--dark)' }}>
-                          📅 {ticket.deadline}
+                          <CalendarDays size={12} /> {ticket.deadline}
                         </span>
                       </div>
 
                       {/* Active Blockage Banner */}
                       {isBlocked && (
                         <div style={{ background: '#FFEBEE', color: '#C62828', fontSize: 10, fontWeight: 800, padding: '4px 6px', borderRadius: 4, marginBottom: 8 }}>
-                          🚨 BLOCAGE : {ticket.blockage.reason}
+                          <AlertTriangle size={12} /> BLOCAGE : {ticket.blockage.reason}
                         </div>
                       )}
 
                       {/* SLA Warning */}
                       {clientSla && (
                         <div style={{ background: clientSla.isPassed ? '#FFEBEE' : '#E3F2FD', color: clientSla.isPassed ? '#C62828' : '#0D47A1', fontSize: 10, fontWeight: 700, padding: '4px 6px', borderRadius: 4, marginBottom: 8 }}>
-                          ⏳ {clientSla.text}
+                          <Clock3 size={12} /> {clientSla.text}
                         </div>
                       )}
                       {qualifSla && (
                         <div style={{ background: qualifSla.isPassed ? '#FFEBEE' : '#FFF3E0', color: qualifSla.isPassed ? '#C62828' : '#E65100', fontSize: 10, fontWeight: 700, padding: '4px 6px', borderRadius: 4, marginBottom: 8 }}>
-                          ⏱️ Qualif : {qualifSla.text}
+                          <Clock3 size={12} /> Qualif : {qualifSla.text}
                         </div>
                       )}
 
@@ -283,7 +284,7 @@ export default function TrafficKanbanView({
                         <div className="flex items-center gap-6">
                           {ticket.loggedHours > 0 && (
                             <span style={{ fontSize: 10, color: 'var(--muted)' }}>
-                              ⏱️ {ticket.loggedHours}h / {ticket.estimatedHours || 8}h
+                              <Clock3 size={11} /> {ticket.loggedHours}h / {ticket.estimatedHours || 8}h
                             </span>
                           )}
                           <span 
@@ -297,7 +298,7 @@ export default function TrafficKanbanView({
                             }}
                             title="Score d'urgence algorithmique"
                           >
-                            ⚡ {score}
+                            <Activity size={11} /> {score}
                           </span>
                         </div>
                       </div>
@@ -314,7 +315,7 @@ export default function TrafficKanbanView({
                 onClick={onOpenNewTicket}
                 style={{ width: '100%', fontSize: 11, border: '1px dashed #CCC' }}
               >
-                + Ajouter une demande
+                <Plus size={14} /> Ajouter une demande
               </button>
             )}
           </div>

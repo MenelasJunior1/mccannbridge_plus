@@ -1,8 +1,11 @@
+'use client';
+
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppProvider } from './context/AppContext';
 import DashboardLayout from './components/layout/DashboardLayout';
 import LoginPage from './pages/LoginPage';
+import LandingPage from './pages/Landing/LandingPage';
 import TrafficIAPage from './pages/TrafficIA/TrafficIAPage';
 import BriefsPage from './pages/Briefs/BriefsPage';
 import CalendarPage from './pages/Calendar/CalendarPage';
@@ -18,10 +21,12 @@ import DocumentsPage from './pages/Documents/DocumentsPage';
 import TasksPage from './pages/Tasks/TasksPage';
 import GrowthPage from './pages/Growth/GrowthPage';
 import AssistantIAPage from './pages/AssistantIA/AssistantIAPage';
+import MonitoringPage from './pages/Monitoring/MonitoringPage';
 import PromptLibraryPage from './pages/PromptLibrary/PromptLibraryPage';
 import AdminIAPage from './pages/AdminIA/AdminIAPage';
 function ProtectedRoutes() {
-  const { isAuthenticated, isAgency, isClient, user } = useAuth();
+  const { isAuthenticated, isAgency, isClient, user, loadingAuth } = useAuth();
+  if (loadingAuth) return <div className="next-app-loading"><span /><strong>Vérification de la session…</strong></div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   const canAccessInternalOps = isAgency && !isClient && user?.role !== 'client';
@@ -32,6 +37,7 @@ function ProtectedRoutes() {
         <Route element={<DashboardLayout />}>
           <Route path="/traffic" element={<TrafficIAPage />} />
           {isAgency && <Route path="/assistant-ia" element={<AssistantIAPage />} />}
+          {user?.systemRole === 'super_admin' && <Route path="/monitoring" element={<MonitoringPage />} />}
           {isAgency && <Route path="/prompts" element={<PromptLibraryPage />} />}
           <Route path="/briefs" element={<BriefsPage />} />
           <Route path="/calendar" element={<CalendarPage />} />
@@ -64,12 +70,15 @@ function ProtectedRoutes() {
 }
 
 function AppRoutes() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAgency, loadingAuth } = useAuth();
+  if (loadingAuth) return <div className="next-app-loading"><span /><strong>Chargement…</strong></div>;
+  const workspacePath = isAgency ? '/traffic' : '/briefs';
 
   return (
     <Routes>
-      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
-      <Route path="/home" element={<LoginPage />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={isAuthenticated ? <Navigate to={workspacePath} replace /> : <LoginPage />} />
+      <Route path="/home" element={<Navigate to="/" replace />} />
       <Route path="/*" element={<ProtectedRoutes />} />
     </Routes>
   );
@@ -77,7 +86,7 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
+    <BrowserRouter>
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>
